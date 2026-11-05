@@ -115,7 +115,7 @@ export function PlanForm({ profile, employees, plan, onClose, onSaved }: Props) 
             </select>
           </div>
           <div className="field"><label>สถานะ</label>
-            <select value={status} onChange={e => setStatus(e.target.value)}>
+            <select value={status} onChange={(e) => setStatus(e.target.value as WorkPlan["status"])}>
               <option value="planned">วางแผนแล้ว</option><option value="in_progress">กำลังดำเนินการ</option>
               <option value="completed">เสร็จสิ้น</option><option value="cancelled">ยกเลิก</option>
             </select>
