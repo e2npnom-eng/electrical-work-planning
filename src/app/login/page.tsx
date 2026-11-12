@@ -12,7 +12,7 @@ export default async function LoginPage() {
       <section className="panel" style={{ width: "100%", maxWidth: 420 }}>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div style={{ fontSize: 34 }}>⚡</div>
-          <h1 style={{ margin: "8px 0" }}>ELECTRICAL PLANNING</h1>
+          <h1 style={{ margin: "8px 0" }}>ปฏิทินแผนงาน ผปบ.กฟจ.นครพนม</h1>
           <p className="muted">ระบบปฏิทินแผนงานด้านไฟฟ้า</p>
         </div>
         <LoginForm />
