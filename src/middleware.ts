@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
-const MAX_SESSION_MS = 2 * 60 * 1000; // 6 ชั่วโมง
+const MAX_SESSION_MS = 6 * 60 * 60 * 1000; // 6 ชั่วโมง
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
