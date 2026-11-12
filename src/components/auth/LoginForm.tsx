@@ -28,7 +28,7 @@ export function LoginForm() {
       setError("เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบรหัสพนักงานและรหัสผ่าน");
       return;
     }
-    // ไม่ปิดสถานะโหลด ให้ปุ่มค้าง "กำลังเข้าสู่ระบบ..." จนกว่าหน้าใหม่จะเปิด
+    // ไม่ปิดสถานะโหลด ให้ปุ่มค้างจนกว่าหน้าใหม่จะเปิด
     window.location.assign("/calendar");
   }
 
@@ -44,4 +44,8 @@ export function LoginForm() {
         onChange={e => setPassword(e.target.value)} required placeholder="รหัสผ่าน" />
     </div>
     {error && <p className="error">{error}</p>}
-    <button
+    <button className="btn" style={{ width: "100%" }} disabled={loading}>
+      {loading ? "กำลังเข้าสู่ระบบ กรุณารอสักครู่..." : "เข้าสู่ระบบ"}
+    </button>
+  </form>;
+}
