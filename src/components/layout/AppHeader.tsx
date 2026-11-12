@@ -14,7 +14,7 @@ export function AppHeader({ profile }: { profile: EmployeeProfile }) {
     router.refresh();
   }
   return <header className="topbar">
-    <Link href="/calendar" className="brand">⚡ ELECTRICAL PLANNING</Link>
+    <Link href="/calendar" className="brand">⚡ ปฏิทินแผนงาน ผปบ.กฟจ.นครพนม</Link>
     <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
       <div style={{ textAlign: "right" }}>
         <div style={{ fontWeight: 700 }}>{profile.full_name}</div>
