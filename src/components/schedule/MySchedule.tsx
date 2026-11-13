@@ -18,8 +18,7 @@ const fmtTime = (v: string) =>
 export function MySchedule({ profile }: { profile: EmployeeProfile }) {
   const supabase = useMemo(() => createClient(), []);
   const [plans, setPlans] = useState<WorkPlan[]>([]);
-  const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
-  const [empId, setEmpId] = useState(profile.id);
+  const empId = profile.id;
   const [month, setMonth] = useState("");
   const [allMonths, setAllMonths] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -34,21 +33,19 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const [planResult, employeeResult] = await Promise.all([
-        supabase.from("work_plans").select("*, controller:employees!work_plans_controller_id_fkey(id, full_name, employee_code), creator:employees!work_plans_created_by_fkey(id, full_name, employee_code), work_plan_members(employee_id, employee:employees(id, full_name, employee_code))").order("start_at"),
-        supabase.from("employees").select("id, employee_code, full_name, role, active").eq("active", true).order("full_name")
+      const [planResult] = await Promise.all([
+        supabase.from("work_plans").select("*, controller:employees!work_plans_controller_id_fkey(id, full_name, employee_code), creator:employees!work_plans_created_by_fkey(id, full_name, employee_code), work_plan_members(employee_id, employee:employees(id, full_name, employee_code))").order("start_at")
       ]);
       if (cancelled) return;
       if (planResult.error) setError(planResult.error.message);
       else setPlans((planResult.data ?? []) as unknown as WorkPlan[]);
-      if (!employeeResult.error) setEmployees((employeeResult.data ?? []) as EmployeeProfile[]);
       setLoading(false);
     }
     void load();
     return () => { cancelled = true; };
   }, [supabase]);
 
-  const emp = employees.find(e => e.id === empId) ?? profile;
+  const emp = profile;
   const useMonth = !allMonths && month !== "";
 
   const rows = useMemo(() => {
@@ -98,10 +95,7 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
       <div className="sched-controls no-print">
         <div className="field">
           <label htmlFor="sc-emp">พนักงาน</label>
-          <select id="sc-emp" value={empId} onChange={e => setEmpId(e.target.value)}>
-            {employees.length === 0 && <option value={profile.id}>{profile.full_name} ({profile.employee_code})</option>}
-            {employees.map(e => <option key={e.id} value={e.id}>{e.full_name} ({e.employee_code})</option>)}
-          </select>
+          <input id="sc-emp" readOnly value={`${profile.full_name} (${profile.employee_code})`} />
         </div>
         <div className="field">
           <label htmlFor="sc-month">เดือน</label>
@@ -132,6 +126,7 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
       {loading ? <p>กำลังโหลดตารางงาน...</p> : (
         <section className="sheet">
           <div className="sheet-title">
+            <img src="/pea-logo.png" alt="โลโก้ การไฟฟ้าส่วนภูมิภาค" className="sheet-logo" />
             <h2>ตารางแผนงานปฏิบัติงาน</h2>
             <div>ผปบ.กฟจ.นครพนม</div>
           </div>
