@@ -44,6 +44,12 @@ export function PlanForm({ profile, employees, plan, onClose, onSaved }: Props) 
   const [memberIds, setMemberIds] = useState<string[]>(plan?.work_plan_members?.map(m => m.employee_id) ?? []);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [memberQuery, setMemberQuery] = useState("");
+
+  const q = memberQuery.trim().toLowerCase();
+  const filteredEmployees = q
+    ? employees.filter(e => e.full_name.toLowerCase().includes(q) || e.employee_code.toLowerCase().includes(q))
+    : employees;
 
   function toggleMember(id: string) {
     setMemberIds(current => current.includes(id) ? current.filter(x => x !== id) : [...current, id]);
@@ -136,12 +142,25 @@ export function PlanForm({ profile, employees, plan, onClose, onSaved }: Props) 
             </div>
           </div>
           <div className="field">
-            <span className="field-label">ทีมงาน / ผู้ปฏิบัติงาน</span>
-            <div className="member-box">
-              {employees.map(e => (
-                <label key={e.id}>
+            <div className="member-head">
+              <span className="field-label">ทีมงาน / ผู้ปฏิบัติงาน</span>
+              <span className="muted">
+                เลือกแล้ว {memberIds.length} คน
+                {memberIds.length > 0 && <>
+                  {" · "}
+                  <button type="button" className="link-btn" onClick={() => setMemberIds([])}>ล้างที่เลือก</button>
+                </>}
+              </span>
+            </div>
+            <input type="search" className="member-search" placeholder="ค้นหาชื่อหรือรหัสพนักงาน"
+              aria-label="ค้นหาทีมงาน" value={memberQuery} onChange={e => setMemberQuery(e.target.value)} />
+            <div className="member-list" role="group" aria-label="รายชื่อทีมงาน">
+              {filteredEmployees.length === 0 && <p className="muted" style={{ margin: 0, padding: 12 }}>ไม่พบรายชื่อที่ค้นหา</p>}
+              {filteredEmployees.map(e => (
+                <label key={e.id} className="member-item">
                   <input type="checkbox" checked={memberIds.includes(e.id)} onChange={() => toggleMember(e.id)} />
-                  {e.full_name} ({e.employee_code})
+                  <span>{e.full_name}</span>
+                  <small>{e.employee_code}</small>
                 </label>
               ))}
             </div>
