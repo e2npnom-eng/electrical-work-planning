@@ -1,12 +1,5 @@
 import type { Metadata } from "next";
-import { Anuphan } from "next/font/google";
 import "./globals.css";
-
-const anuphan = Anuphan({
-  subsets: ["thai", "latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap"
-});
 
 export const metadata: Metadata = {
   title: "ปฏิทินแผนงาน ผปบ.กฟจ.นครพนม",
@@ -18,7 +11,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="th" className={anuphan.className}>
+    <html lang="th">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap"
+        />
+      </head>
       <body><div className="app-shell">{children}</div></body>
     </html>
   );
