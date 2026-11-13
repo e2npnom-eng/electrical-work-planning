@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { FormEvent, CSSProperties } from "react";
+import type { FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { EmployeeProfile } from "@/types/employee";
 import type { WorkPlan } from "@/types/plan";
@@ -13,6 +13,17 @@ type Props = {
   onClose: () => void;
   onSaved: () => void;
 };
+
+type PlanStatus = WorkPlan["status"];
+
+const WORK_TYPES: [string, string][] = [
+  ["maintenance", "บำรุงรักษา"], ["fault", "แก้ไขเหตุขัดข้อง"],
+  ["construction", "ก่อสร้าง / ติดตั้ง"], ["inspection", "ตรวจสอบ"], ["other", "อื่น ๆ"]
+];
+const STATUSES: [PlanStatus, string][] = [
+  ["planned", "วางแผนแล้ว"], ["in_progress", "กำลังดำเนินการ"],
+  ["completed", "เสร็จสิ้น"], ["cancelled", "ยกเลิก"]
+];
 
 function localDateTime(value?: string) {
   if (!value) return "";
@@ -29,7 +40,7 @@ export function PlanForm({ profile, employees, plan, onClose, onSaved }: Props) 
   const [endAt, setEndAt] = useState(localDateTime(plan?.end_at));
   const [workType, setWorkType] = useState(plan?.work_type ?? "maintenance");
   const [description, setDescription] = useState(plan?.description ?? "");
-  const [status, setStatus] = useState(plan?.status ?? "planned");
+  const [status, setStatus] = useState<PlanStatus>(plan?.status ?? "planned");
   const [memberIds, setMemberIds] = useState<string[]>(plan?.work_plan_members?.map(m => m.employee_id) ?? []);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -80,55 +91,70 @@ export function PlanForm({ profile, employees, plan, onClose, onSaved }: Props) 
     onSaved();
   }
 
-  return <div style={overlay}>
-    <section className="panel" style={modal}>
-      <div className="toolbar">
-        <h2 style={{ margin: 0 }}>{plan ? "แก้ไขแผนงาน" : "เพิ่มแผนงานใหม่"}</h2>
-        <button className="btn secondary" type="button" onClick={onClose}>ปิด</button>
-      </div>
-      <form onSubmit={handleSubmit}>
-        <div className="field"><label>ชื่อแผนงาน *</label><input required value={title} onChange={e => setTitle(e.target.value)} /></div>
-        <div className="field"><label>ผู้ควบคุมงาน *</label>
-          <select required value={controllerId} onChange={e => setControllerId(e.target.value)}>
-            <option value="">เลือกผู้ควบคุมงาน</option>
-            {employees.map(e => <option key={e.id} value={e.id}>{e.full_name} ({e.employee_code})</option>)}
-          </select>
+  return (
+    <div className="overlay" role="dialog" aria-modal="true" aria-label={plan ? "แก้ไขแผนงาน" : "เพิ่มแผนงานใหม่"}>
+      <section className="modal">
+        <div className="modal-head">
+          <h2>{plan ? "แก้ไขแผนงาน" : "เพิ่มแผนงานใหม่"}</h2>
+          <button className="icon-btn" type="button" onClick={onClose} aria-label="ปิด">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
         </div>
-        <div className="field"><label>ทีมงาน / ผู้ปฏิบัติงาน</label>
-          <div style={memberBox}>
-            {employees.map(e => <label key={e.id} style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 400 }}>
-              <input type="checkbox" checked={memberIds.includes(e.id)} onChange={() => toggleMember(e.id)} />
-              {e.full_name} ({e.employee_code})
-            </label>)}
+        <form onSubmit={handleSubmit}>
+          <div className="field"><label htmlFor="pf-title">ชื่อแผนงาน *</label>
+            <input id="pf-title" required value={title} onChange={e => setTitle(e.target.value)} /></div>
+          <div className="two-col">
+            <div className="field"><label htmlFor="pf-ctrl">ผู้ควบคุมงาน *</label>
+              <select id="pf-ctrl" required value={controllerId} onChange={e => setControllerId(e.target.value)}>
+                <option value="">เลือกผู้ควบคุมงาน</option>
+                {employees.map(e => <option key={e.id} value={e.id}>{e.full_name} ({e.employee_code})</option>)}
+              </select>
+            </div>
+            <div className="field"><label htmlFor="pf-loc">สถานที่ปฏิบัติงาน *</label>
+              <input id="pf-loc" required value={location} onChange={e => setLocation(e.target.value)} /></div>
+            <div className="field"><label htmlFor="pf-start">วันเวลาเริ่มต้น *</label>
+              <input id="pf-start" required type="datetime-local" value={startAt} onChange={e => setStartAt(e.target.value)} /></div>
+            <div className="field"><label htmlFor="pf-end">วันเวลาสิ้นสุด *</label>
+              <input id="pf-end" required type="datetime-local" value={endAt} onChange={e => setEndAt(e.target.value)} /></div>
           </div>
-        </div>
-        <div className="field"><label>สถานที่ปฏิบัติงาน *</label><input required value={location} onChange={e => setLocation(e.target.value)} /></div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div className="field"><label>วันเวลาเริ่มต้น *</label><input required type="datetime-local" value={startAt} onChange={e => setStartAt(e.target.value)} /></div>
-          <div className="field"><label>วันเวลาสิ้นสุด *</label><input required type="datetime-local" value={endAt} onChange={e => setEndAt(e.target.value)} /></div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div className="field"><label>ประเภทงาน</label>
-            <select value={workType} onChange={e => setWorkType(e.target.value)}>
-              <option value="maintenance">บำรุงรักษา</option><option value="fault">แก้ไขเหตุขัดข้อง</option>
-              <option value="construction">ก่อสร้าง / ติดตั้ง</option><option value="inspection">ตรวจสอบ</option><option value="other">อื่น ๆ</option>
-            </select>
+          <div className="field">
+            <span className="field-label">ประเภทงาน</span>
+            <div className="chips">
+              {WORK_TYPES.map(([value, label]) => (
+                <button type="button" key={value} className="choice" aria-pressed={workType === value}
+                  onClick={() => setWorkType(value)}>{label}</button>
+              ))}
+            </div>
           </div>
-          <div className="field"><label>สถานะ</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value as WorkPlan["status"])}>
-              <option value="planned">วางแผนแล้ว</option><option value="in_progress">กำลังดำเนินการ</option>
-              <option value="completed">เสร็จสิ้น</option><option value="cancelled">ยกเลิก</option>
-            </select>
+          <div className="field">
+            <span className="field-label">สถานะ</span>
+            <div className="chips">
+              {STATUSES.map(([value, label]) => (
+                <button type="button" key={value} className="choice" aria-pressed={status === value}
+                  onClick={() => setStatus(value)}>{label}</button>
+              ))}
+            </div>
           </div>
-        </div>
-        <div className="field"><label>รายละเอียดเพิ่มเติม</label><textarea value={description} onChange={e => setDescription(e.target.value)} /></div>
-        {error && <p className="error">{error}</p>}
-        <button className="btn" disabled={saving} style={{ width: "100%" }}>{saving ? "กำลังบันทึก..." : "บันทึกแผนงาน"}</button>
-      </form>
-    </section>
-  </div>;
+          <div className="field">
+            <span className="field-label">ทีมงาน / ผู้ปฏิบัติงาน</span>
+            <div className="member-box">
+              {employees.map(e => (
+                <label key={e.id}>
+                  <input type="checkbox" checked={memberIds.includes(e.id)} onChange={() => toggleMember(e.id)} />
+                  {e.full_name} ({e.employee_code})
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="field"><label htmlFor="pf-desc">รายละเอียดเพิ่มเติม</label>
+            <textarea id="pf-desc" value={description} onChange={e => setDescription(e.target.value)} /></div>
+          {error && <p className="error" role="alert">{error}</p>}
+          <div className="modal-actions" style={{ marginTop: 8 }}>
+            <button type="button" className="btn secondary" onClick={onClose}>ยกเลิก</button>
+            <button className="btn" disabled={saving}>{saving ? "กำลังบันทึก..." : "บันทึกแผนงาน"}</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  );
 }
-
-const overlay: CSSProperties = { position: "fixed", inset: 0, zIndex: 50, background: "rgba(10,25,40,.55)", display: "grid", placeItems: "center", padding: 14 };
-const modal: CSSProperties = { width: "100%", maxWidth: 680, maxHeight: "92vh", overflow: "auto" };
-const memberBox: CSSProperties = { border: "1px solid #ccd6e2", borderRadius: 9, padding: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 8, maxHeight: 140, overflow: "auto" };

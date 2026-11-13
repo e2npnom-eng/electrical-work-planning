@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
+import { Anuphan } from "next/font/google";
 import "./globals.css";
+
+const anuphan = Anuphan({
+  subsets: ["thai", "latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap"
+});
 
 export const metadata: Metadata = {
   title: "ปฏิทินแผนงาน ผปบ.กฟจ.นครพนม",
@@ -10,5 +17,9 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="th"><body><div className="app-shell">{children}</div></body></html>;
+  return (
+    <html lang="th" className={anuphan.className}>
+      <body><div className="app-shell">{children}</div></body>
+    </html>
+  );
 }
