@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { EmployeeProfile } from "@/types/employee";
 
 const svgProps = {
-  width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
+  width: 20, height: 20, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
   strokeWidth: 1.9, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true
 };
 
@@ -61,7 +61,7 @@ export function AppHeader({ profile }: { profile: EmployeeProfile }) {
 
       <Link href="/calendar" className="sb-brand" title="ปฏิทินแผนงาน ผปบ.กฟจ.นครพนม">
         <span className="sb-brand-mark" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12.5L13 2z" fill="currentColor" /></svg>
+          <svg width="26" height="26" viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12.5L13 2z" fill="currentColor" /></svg>
         </span>
         <span className="sb-label"><b>ปฏิทินแผนงาน</b><small>ผปบ.กฟจ.นครพนม</small></span>
       </Link>
@@ -97,7 +97,7 @@ export function AppHeader({ profile }: { profile: EmployeeProfile }) {
           </span>
         </div>
         <button className="sb-logout" onClick={signOut} title="ออกจากระบบ" aria-label="ออกจากระบบ">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
             strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
           </svg>
