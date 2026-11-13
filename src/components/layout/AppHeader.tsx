@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { EmployeeProfile } from "@/types/employee";
 
+const TABS = [
+  { href: "/calendar", label: "ปฏิทินแผนงาน" },
+  { href: "/my-schedule", label: "ตารางงานของฉัน" }
+];
+
 export function AppHeader({ profile }: { profile: EmployeeProfile }) {
   const router = useRouter();
+  const pathname = usePathname();
   async function signOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -29,6 +35,12 @@ export function AppHeader({ profile }: { profile: EmployeeProfile }) {
         {profile.role === "admin" && <Link href="/admin" className="topbar-link">จัดการระบบ</Link>}
         <button className="topbar-btn" onClick={signOut}>ออกจากระบบ</button>
       </div>
+      <nav className="nav-tabs" aria-label="เมนูหลัก">
+        {TABS.map(t => (
+          <Link key={t.href} href={t.href} className="nav-tab"
+            aria-current={pathname === t.href ? "page" : undefined}>{t.label}</Link>
+        ))}
+      </nav>
     </header>
   );
 }
