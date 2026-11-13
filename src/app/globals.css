@@ -215,6 +215,121 @@ a { color: inherit; text-decoration: none; }
 .login-card { width: 100%; max-width: 400px; }
 .login-card h1 { margin: 0 0 8px; font-size: 32px; line-height: 1.3; font-weight: 700; }
 
+/* ---------- Sidebar ---------- */
+:root { --sb-w: 264px; }
+.app-shell:has(> .sidebar) {
+  display: grid; grid-template-columns: var(--sb-w) minmax(0, 1fr); transition: grid-template-columns 0.2s ease;
+}
+.sidebar {
+  position: sticky; top: 0; align-self: start; height: 100vh; z-index: 20;
+  display: flex; flex-direction: column; gap: 20px; padding: 18px 12px;
+  background: var(--deep); color: #fff;
+}
+.sb-toggle {
+  position: absolute; top: 28px; right: -14px; width: 28px; height: 28px; padding: 0;
+  border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.25); background: #3d2470; color: #fff;
+  display: grid; place-items: center;
+}
+.sb-brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px; min-width: 0; }
+.sb-brand-mark {
+  width: 40px; height: 40px; flex: none; border-radius: 11px;
+  background: var(--amber); color: var(--deep); display: grid; place-items: center;
+}
+.sb-brand b { display: block; font-size: 17px; line-height: 1.25; }
+.sb-brand small { display: block; font-size: 13px; color: rgba(255, 255, 255, 0.7); }
+.sb-nav { flex: 1; display: flex; flex-direction: column; gap: 18px; overflow-y: auto; }
+.sb-group { display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 14px; background: rgba(255, 255, 255, 0.05); }
+.sb-group-title { padding: 4px 8px 6px; font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, 0.6); }
+.sb-item {
+  display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 0 12px;
+  border-radius: 10px; font-size: 15px; font-weight: 500; color: rgba(255, 255, 255, 0.85);
+}
+.sb-item svg { flex: none; }
+.sb-item:hover { background: rgba(255, 255, 255, 0.09); color: #fff; }
+.sb-item[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.16); color: #fff; font-weight: 600; box-shadow: inset 3px 0 0 var(--amber);
+}
+.sb-user { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 14px; background: rgba(255, 255, 255, 0.07); }
+.sb-user-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sb-avatar {
+  width: 38px; height: 38px; flex: none; border-radius: 19px; background: var(--amber); color: var(--deep);
+  display: grid; place-items: center; font-weight: 700;
+}
+.sb-user-info { min-width: 0; }
+.sb-user-info b { display: block; font-size: 14px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-user-info small { display: block; font-size: 12px; color: rgba(255, 255, 255, 0.7); }
+.sb-logout {
+  display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px;
+  border: 0; border-radius: 10px; background: #fff; color: var(--deep); font-size: 15px; font-weight: 600;
+}
+@media (min-width: 901px) {
+  .sidebar.collapsed .sb-label, .sidebar.collapsed .sb-group-title { display: none; }
+  .sidebar.collapsed .sb-brand, .sidebar.collapsed .sb-item { justify-content: center; padding: 0; }
+  .sidebar.collapsed .sb-user { padding: 8px 4px; align-items: center; }
+  .sidebar.collapsed .sb-group { padding: 6px 4px; }
+}
+@media (max-width: 900px) {
+  .app-shell:has(> .sidebar) { display: block; }
+  .sidebar {
+    position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center;
+    gap: 12px; padding: 12px 16px;
+  }
+  .sb-toggle { display: none; }
+  .sb-nav { order: 3; flex-basis: 100%; flex-direction: row; overflow-x: auto; gap: 8px; }
+  .sb-group { flex-direction: row; padding: 4px; }
+  .sb-group-title { display: none; }
+  .sb-item { white-space: nowrap; }
+  .sb-user { margin-left: auto; flex-direction: row; align-items: center; padding: 6px 8px; }
+  .sb-user-info { display: none; }
+  .sb-logout { padding: 0 12px; }
+}
+
+/* ---------- My schedule (sheet) ---------- */
+.sched-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; margin-bottom: 20px; }
+.sched-controls .field { margin: 0; min-width: 220px; }
+.check-inline { display: flex; align-items: center; gap: 10px; min-height: 48px; font-size: 15px; }
+.check-inline input { width: 20px; height: 20px; accent-color: var(--brand); }
+.sched-actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: 10px; }
+.sheet { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 32px; }
+.sheet-title { text-align: center; margin-bottom: 20px; }
+.sheet-title h2 { margin: 0 0 4px; font-size: 24px; font-weight: 700; }
+.sheet-meta {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 24px;
+  margin-bottom: 20px; font-size: 15px;
+}
+.sheet-table-wrap { overflow-x: auto; }
+.sheet-table { width: 100%; min-width: 980px; border-collapse: collapse; font-size: 14px; }
+.sheet-table th, .sheet-table td {
+  border: 1px solid #cfc7dd; padding: 8px 10px; text-align: left; vertical-align: top;
+}
+.sheet-table th { background: var(--bg); font-weight: 600; white-space: nowrap; }
+.sheet-table td.c { text-align: center; }
+.sheet-table small { color: var(--muted); }
+.detail-btn {
+  min-height: 36px; padding: 0 12px; border: 1px solid #d8d0e6; border-radius: 10px;
+  background: #fff; color: var(--brand); font-size: 14px; font-weight: 600; white-space: nowrap;
+}
+.detail-btn:hover { background: var(--brand-soft); }
+.sign-row { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 24px; margin-top: 56px; text-align: center; font-size: 14px; }
+.sign-row > div { min-width: 200px; }
+.sign-line { border-bottom: 1px dotted #555; height: 36px; margin-bottom: 8px; }
+
+/* ---------- Print ---------- */
+@page { size: A4 landscape; margin: 12mm; }
+@media print {
+  .topbar, .sidebar, .no-print, .overlay { display: none !important; }
+  .app-shell:has(> .sidebar) { display: block; }
+  body { background: #fff; font-size: 12px; }
+  .page { max-width: none; padding: 0; }
+  .sheet { border: 0; border-radius: 0; padding: 0; }
+  .sheet-table { min-width: 0; font-size: 11px; }
+  .sheet-table th, .sheet-table td { padding: 5px 6px; }
+  .sheet-table thead { display: table-header-group; }
+  .sheet-table tr { break-inside: avoid; }
+  .sign-row { break-inside: avoid; margin-top: 40px; }
+  .badge, .sheet-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
 /* ---------- Mobile ---------- */
 @media (max-width: 700px) {
   .topbar { padding: 12px 16px; }
