@@ -126,7 +126,7 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
       {loading ? <p>กำลังโหลดตารางงาน...</p> : (
         <section className="sheet">
           <div className="sheet-title">
-            <img src="/pea_logo_big.png" alt="โลโก้ การไฟฟ้าส่วนภูมิภาค" className="sheet-logo" />
+            <img src="/pea-logo.png" alt="โลโก้ การไฟฟ้าส่วนภูมิภาค" className="sheet-logo" />
             <h2>ตารางแผนงานปฏิบัติงาน</h2>
             <div>ผปบ.กฟจ.นครพนม</div>
           </div>
@@ -185,6 +185,7 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
             <div><div className="sign-line" />ผู้ตรวจสอบ<br /><small>(.......................................)</small></div>
             <div><div className="sign-line" />ผู้อนุมัติ<br /><small>(.......................................)</small></div>
           </div>
+          <div className="print-footer">การไฟฟ้าส่วนภูมิภาคจังหวัดนครพนม</div>
         </section>
       )}
 
