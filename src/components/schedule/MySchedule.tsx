@@ -195,10 +195,10 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
             {["ผู้จัดทำ", "ผู้ตรวจสอบ", "ผู้อนุมัติ"].map(t => (
               <div className="sg" key={t}>
                 <div className="sg-title">ลงนาม{t}</div>
-                <div className="sg-row"><span className="sg-label">(ลงชื่อ)</span><span className="sg-fill" /></div>
-                <div className="sg-row"><span className="sg-label">(</span><span className="sg-fill" /><span className="sg-label">)</span></div>
-                <div className="sg-row"><span className="sg-label">ตำแหน่ง</span><span className="sg-fill" /></div>
-                <div className="sg-row"><span className="sg-fill" /><span className="sg-label">/</span><span className="sg-fill" /><span className="sg-label">/</span><span className="sg-fill" /></div>
+                <div className="sg-row"><span className="sg-label">(ลงชื่อ)</span><span className="sg-fill" /><span /></div>
+                <div className="sg-row"><span className="sg-label sg-open">(</span><span className="sg-fill" /><span className="sg-label sg-close">)</span></div>
+                <div className="sg-row"><span className="sg-label">ตำแหน่ง</span><span className="sg-fill" /><span /></div>
+                <div className="sg-row"><span className="sg-label">วันที่</span><span className="sg-date"><span className="sg-fill" /><i>/</i><span className="sg-fill" /><i>/</i><span className="sg-fill" /></span><span /></div>
               </div>
             ))}
           </div>
