@@ -159,11 +159,13 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
           </button>
         </div>
       </div>
-      <p className="muted no-print" style={{ margin: "-4px 0 20px" }}>
-        ส่งออก PDF: ในหน้าต่างพิมพ์ที่เปิดขึ้น ให้เลือกเครื่องพิมพ์เป็น “บันทึกเป็น PDF” (Save as PDF)
-        <br />เลือกพิมพ์เฉพาะบางรายการ: ใส่ช่วงเลขลำดับด้านบน หรือติ๊กช่อง “พิมพ์” ท้ายแถว (ไม่ติ๊กเลย = พิมพ์ทั้งหมดที่แสดง)
-        {anyPicked && <> · ติ๊กไว้ {printCount} รายการ <button type="button" className="link-btn" onClick={() => setPicked([])}>ล้างที่ติ๊ก</button></>}
-      </p>
+      <ul className="hint-list no-print">
+        <li>ส่งออก PDF: ในหน้าต่างพิมพ์ที่เปิดขึ้น ให้เลือกเครื่องพิมพ์เป็น “บันทึกเป็น PDF” (Save as PDF)</li>
+        <li>
+          เลือกพิมพ์เฉพาะบางรายการ: ใส่ช่วงเลขลำดับด้านบน หรือติ๊กช่อง “พิมพ์” ท้ายแถว (ไม่ติ๊กเลย = พิมพ์ทั้งหมดที่แสดง)
+          {anyPicked && <> · ติ๊กไว้ {printCount} รายการ <button type="button" className="link-btn" onClick={() => setPicked([])}>ล้างที่ติ๊ก</button></>}
+        </li>
+      </ul>
 
       {error && <p className="error no-print" role="alert">{error}</p>}
 
