@@ -66,3 +66,32 @@
 @media print {
   .toast, .filters, .today-grid { display: none !important; }
 }
+
+/* ลายเซ็น: วงเล็บชื่อ -> เส้นประยาว -> ตัวอักษรหัวข้อ */
+.sign-row .sign-name { height: 40px; display: flex; align-items: flex-end; justify-content: center; font-size: 14px; letter-spacing: 1px; }
+.sign-row .sign-line { height: 0; margin: 6px auto 8px; width: 100%; border-bottom: 1.5px dotted #555; }
+.sign-row b { font-size: 15px; font-weight: 600; }
+
+/* ===== พิมพ์แนวตั้ง A4 (Portrait) ===== */
+@page { size: A4 portrait; margin: 0; }
+@media print {
+  .page { padding: 10mm 8mm 16mm; }
+  .sheet-title { min-height: 64px; margin-bottom: 10px; }
+  .sheet-logo { width: 60px; height: 60px; }
+  .sheet-title h2 { font-size: 18px; }
+  .sheet-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); font-size: 11px; gap: 4px 16px; margin-bottom: 10px; }
+  .sheet-table { width: 100%; table-layout: auto; font-size: 9px; }
+  .sheet-table th, .sheet-table td { padding: 3px 4px; line-height: 1.35; overflow-wrap: anywhere; }
+  .sheet-table th { white-space: normal; font-size: 9px; }
+  .sheet-table .badge { padding: 1px 6px; font-size: 8.5px; white-space: nowrap; }
+  .sheet-table small { font-size: 8.5px; }
+  .sign-row { gap: 8px; margin-top: 28px; }
+  .sign-row > div { min-width: 0; flex: 1; }
+  .print-footer { left: 8mm; bottom: 6mm; font-size: 10px; }
+}
+@media print {
+  .sheet-table th:first-child { width: 22px !important; }
+  .sheet-table td:nth-child(2), .sheet-table td:nth-child(3) { white-space: nowrap; }
+  .sheet-table th:nth-child(2), .sheet-table th:nth-child(3) { white-space: nowrap; }
+  .sign-row .sign-line { width: 88%; }
+}
