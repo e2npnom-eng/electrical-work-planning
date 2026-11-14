@@ -127,8 +127,12 @@
 /* เลือกพิมพ์เฉพาะบางรายการ */
 .range-field { margin: 0; min-width: 0; }
 .range-row { display: flex; align-items: center; gap: 8px; }
-.range-row input { width: 92px; min-height: 48px; padding: 0 12px; border: 1px solid #cfc7dd; border-radius: 12px; font-size: 16px; }
+.range-row { font-size: 14px; }
+.range-row input { width: 72px; min-height: 40px; padding: 0 10px; border: 1px solid #cfc7dd; border-radius: 10px; font-size: 14px; }
 .pick-box { width: 20px; height: 20px; accent-color: var(--brand); }
 .pick-all { display: flex; align-items: center; gap: 6px; justify-content: center; font-weight: 600; }
 .pick-all input { width: 18px; height: 18px; accent-color: var(--brand); }
 .row-dim { opacity: 0.45; }
+.hint-list { margin: -4px 0 20px; padding-left: 20px; font-size: 13px; line-height: 1.7; color: var(--muted); }
+.hint-list li::marker { color: var(--amber); font-size: 15px; }
+.hint-list .link-btn { font-size: 13px; }
