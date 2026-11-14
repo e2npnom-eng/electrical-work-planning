@@ -160,8 +160,8 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
                   <th>สถานที่</th>
                   {!everyone && <th>บทบาท</th>}
                   <th>ผู้ควบคุมงาน</th>
-                  <th>ทีมงาน</th>
-                  <th>สถานะงาน</th>
+                  <th className="no-print">ทีมงาน</th>
+                  <th className="no-print">สถานะงาน</th>
                   <th>การอนุมัติ</th>
                   <th className="no-print">รายละเอียด</th>
                 </tr>
@@ -175,15 +175,15 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
                   return (
                     <tr key={plan.id}>
                       <td className="c">{i + 1}</td>
-                      <td>{fmtDate(plan.start_at)}<br /><small>{fmtTime(plan.start_at)} น.</small></td>
-                      <td>{fmtDate(plan.end_at)}<br /><small>{fmtTime(plan.end_at)} น.</small></td>
+                      <td className="c">{fmtDate(plan.start_at)}<br /><small>{fmtTime(plan.start_at)} น.</small></td>
+                      <td className="c">{fmtDate(plan.end_at)}<br /><small>{fmtTime(plan.end_at)} น.</small></td>
                       <td style={{ fontWeight: 600 }}>{plan.title}</td>
                       <td>{plan.location}</td>
-                      {!everyone && <td>{role}</td>}
+                      {!everyone && <td className="c">{role}</td>}
                       <td>{plan.controller?.full_name ?? "-"}</td>
-                      <td>{team || "-"}</td>
-                      <td><span className={`badge s-${plan.status}`} style={{ margin: 0 }}>{statusLabel(plan.status)}</span></td>
-                      <td><span className="badge" style={{ margin: 0, background: approvalOf(plan).bg, color: approvalOf(plan).fg }}>{approvalOf(plan).label}</span></td>
+                      <td className="no-print">{team || "-"}</td>
+                      <td className="no-print"><span className={`badge s-${plan.status}`} style={{ margin: 0 }}>{statusLabel(plan.status)}</span></td>
+                      <td className="c"><span className="badge" style={{ margin: 0, background: approvalOf(plan).bg, color: approvalOf(plan).fg }}>{approvalOf(plan).label}</span></td>
                       <td className="no-print">
                         <button className="detail-btn" onClick={() => setSelected(plan)}>ดูรายละเอียด</button>
                       </td>
