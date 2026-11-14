@@ -64,8 +64,7 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
         const isController = p.controller_id === empId;
         const isMember = (p.work_plan_members ?? []).some(m => m.employee_id === empId);
         return isController || isMember;
-      })
-      .map(p => ({ plan: p, role: p.controller_id === empId ? "ผู้ควบคุมงาน" : "ผู้ปฏิบัติงาน" }));
+      });
   }, [plans, empId, everyone, approvedOnly]);
 
   const periodLabel = useMonth
@@ -156,10 +155,9 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
                   <th style={{ width: 44 }}>ที่</th>
                   <th>วันที่เริ่ม</th>
                   <th>วันที่สิ้นสุด</th>
-                  <th>ชื่อแผนงาน</th>
-                  <th>สถานที่</th>
-                  {!everyone && <th>บทบาท</th>}
-                  <th>ผู้ควบคุมงาน</th>
+                  <th className="col-title">ชื่อแผนงาน</th>
+                  <th className="col-place">สถานที่</th>
+                                    <th className="col-ctrl">ผู้ควบคุมงาน</th>
                   <th className="no-print">ทีมงาน</th>
                   <th className="no-print">สถานะงาน</th>
                   <th>การอนุมัติ</th>
@@ -168,19 +166,18 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
               </thead>
               <tbody>
                 {rows.length === 0 && (
-                  <tr><td colSpan={everyone ? 10 : 11} style={{ textAlign: "center", padding: 28 }} className="muted">ไม่มีแผนงานในช่วงเวลานี้</td></tr>
+                  <tr><td colSpan={10} style={{ textAlign: "center", padding: 28 }} className="muted">ไม่มีแผนงานในช่วงเวลานี้</td></tr>
                 )}
-                {rows.map(({ plan, role }, i) => {
+                {rows.map((plan, i) => {
                   const team = (plan.work_plan_members ?? []).map(m => m.employee?.full_name).filter(Boolean).join(", ");
                   return (
                     <tr key={plan.id}>
                       <td className="c">{i + 1}</td>
                       <td className="c">{fmtDate(plan.start_at)}<br /><small>{fmtTime(plan.start_at)} น.</small></td>
                       <td className="c">{fmtDate(plan.end_at)}<br /><small>{fmtTime(plan.end_at)} น.</small></td>
-                      <td style={{ fontWeight: 600 }}>{plan.title}</td>
-                      <td>{plan.location}</td>
-                      {!everyone && <td className="c">{role}</td>}
-                      <td>{plan.controller?.full_name ?? "-"}</td>
+                      <td className="col-title" style={{ fontWeight: 600 }}>{plan.title}</td>
+                      <td className="col-place">{plan.location}</td>
+                                            <td className="col-ctrl">{plan.controller?.full_name ?? "-"}</td>
                       <td className="no-print">{team || "-"}</td>
                       <td className="no-print"><span className={`badge s-${plan.status}`} style={{ margin: 0 }}>{statusLabel(plan.status)}</span></td>
                       <td className="c"><span className="badge" style={{ margin: 0, background: approvalOf(plan).bg, color: approvalOf(plan).fg }}>{approvalOf(plan).label}</span></td>
