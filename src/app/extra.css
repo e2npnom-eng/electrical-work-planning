@@ -128,7 +128,7 @@
 .range-field { margin: 0; min-width: 0; }
 .range-row { display: flex; align-items: center; gap: 8px; }
 .range-row { font-size: 14px; }
-.range-row input { width: 72px; min-height: 40px; padding: 0 10px; border: 1px solid #cfc7dd; border-radius: 10px; font-size: 14px; }
+.range-row input { width: 88px; min-height: 40px; padding: 0 10px; border: 1px solid #cfc7dd; border-radius: 10px; font-size: 14px; }
 .pick-box { width: 20px; height: 20px; accent-color: var(--brand); }
 .pick-all { display: flex; align-items: center; gap: 6px; justify-content: center; font-weight: 600; }
 .pick-all input { width: 18px; height: 18px; accent-color: var(--brand); }
@@ -136,3 +136,9 @@
 .hint-list { margin: -4px 0 20px; padding-left: 20px; font-size: 13px; line-height: 1.7; color: var(--muted); }
 .hint-list li::marker { color: var(--amber); font-size: 15px; }
 .hint-list .link-btn { font-size: 13px; }
+
+/* ตัวอย่างแผนงานหน้าเข้าสู่ระบบ ใช้สีเดียวกับปฏิทิน */
+.hero-chip.a-approved { background: #0f766e; color: #fff; }
+.hero-chip.a-pending { background: #f5a623; color: #2a1450; }
+.hero-chip.a-draft { background: #7c7491; color: #fff; }
+.hero-chip.a-returned { background: #c0392b; color: #fff; }
