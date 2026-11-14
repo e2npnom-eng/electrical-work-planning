@@ -67,6 +67,28 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
       });
   }, [plans, empId, everyone, approvedOnly]);
 
+  // เลขลำดับเดิมคงไว้เสมอ (เลือกช่วง/ติ๊กเลือกแล้วเลขไม่เปลี่ยน)
+  const [rangeFrom, setRangeFrom] = useState("");
+  const [rangeTo, setRangeTo] = useState("");
+  const [picked, setPicked] = useState<string[]>([]);
+  const shown = useMemo(() => {
+    const from = Math.max(1, Number(rangeFrom) || 1);
+    const to = Number(rangeTo) || Number.MAX_SAFE_INTEGER;
+    return rows.map((plan, i) => ({ plan, no: i + 1 })).filter(r => r.no >= from && r.no <= to);
+  }, [rows, rangeFrom, rangeTo]);
+  const anyPicked = shown.some(r => picked.includes(r.plan.id));
+  const printCount = anyPicked ? shown.filter(r => picked.includes(r.plan.id)).length : shown.length;
+  const allShownPicked = shown.length > 0 && shown.every(r => picked.includes(r.plan.id));
+  const rangeActive = rangeFrom !== "" || rangeTo !== "";
+
+  function togglePick(id: string) {
+    setPicked(cur => cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]);
+  }
+  function toggleAllShown() {
+    const ids = shown.map(r => r.plan.id);
+    setPicked(cur => allShownPicked ? cur.filter(x => !ids.includes(x)) : Array.from(new Set([...cur, ...ids])));
+  }
+
   const periodLabel = useMonth
     ? (() => { const [y, m] = month.split("-").map(Number); return new Date(y, m - 1, 1).toLocaleDateString("th-TH", { month: "long", year: "numeric" }); })()
     : "ทุกช่วงเวลา";
@@ -117,6 +139,15 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
           <input type="checkbox" checked={approvedOnly} onChange={e => setApprovedOnly(e.target.checked)} />
           เฉพาะที่อนุมัติแล้ว
         </label>
+        <div className="field range-field">
+          <label>แสดงเฉพาะรายการที่</label>
+          <div className="range-row">
+            <input type="number" min={1} inputMode="numeric" placeholder="เริ่ม" aria-label="จากรายการที่" value={rangeFrom} onChange={e => setRangeFrom(e.target.value)} />
+            <span>ถึง</span>
+            <input type="number" min={1} inputMode="numeric" placeholder="สุดท้าย" aria-label="ถึงรายการที่" value={rangeTo} onChange={e => setRangeTo(e.target.value)} />
+            {rangeActive && <button type="button" className="link-btn" onClick={() => { setRangeFrom(""); setRangeTo(""); }}>ล้าง</button>}
+          </div>
+        </div>
         <div className="sched-actions">
           <button className="btn secondary" onClick={printSheet}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M7 14h10v7H7z" /></svg>
@@ -130,6 +161,8 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
       </div>
       <p className="muted no-print" style={{ margin: "-4px 0 20px" }}>
         ส่งออก PDF: ในหน้าต่างพิมพ์ที่เปิดขึ้น ให้เลือกเครื่องพิมพ์เป็น “บันทึกเป็น PDF” (Save as PDF)
+        <br />เลือกพิมพ์เฉพาะบางรายการ: ใส่ช่วงเลขลำดับด้านบน หรือติ๊กช่อง “พิมพ์” ท้ายแถว (ไม่ติ๊กเลย = พิมพ์ทั้งหมดที่แสดง)
+        {anyPicked && <> · ติ๊กไว้ {printCount} รายการ <button type="button" className="link-btn" onClick={() => setPicked([])}>ล้างที่ติ๊ก</button></>}
       </p>
 
       {error && <p className="error no-print" role="alert">{error}</p>}
@@ -144,7 +177,7 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
           <div className="sheet-meta">
             <div><b>ผู้ปฏิบัติงาน:</b> {everyone ? "ทุกคน (ทั้งทีม)" : `${emp.full_name} (${emp.employee_code})`}</div>
             <div><b>ช่วงเวลา:</b> {periodLabel}</div>
-            <div><b>จำนวนแผนงาน:</b> {rows.length} รายการ</div>
+            <div><b>จำนวนแผนงาน:</b> {printCount} รายการ{(rangeActive || anyPicked) ? ` (จากทั้งหมด ${rows.length})` : ""}</div>
             <div><b>พิมพ์เมื่อ:</b> {fmtDate(new Date().toISOString())} {fmtTime(new Date().toISOString())} น.</div>
           </div>
 
@@ -162,17 +195,18 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
                   <th className="no-print">สถานะงาน</th>
                   <th>การอนุมัติ</th>
                   <th className="no-print">รายละเอียด</th>
+                  <th className="no-print"><label className="pick-all"><input type="checkbox" checked={allShownPicked} onChange={toggleAllShown} />พิมพ์</label></th>
                 </tr>
               </thead>
               <tbody>
-                {rows.length === 0 && (
-                  <tr><td colSpan={10} style={{ textAlign: "center", padding: 28 }} className="muted">ไม่มีแผนงานในช่วงเวลานี้</td></tr>
+                {shown.length === 0 && (
+                  <tr><td colSpan={11} style={{ textAlign: "center", padding: 28 }} className="muted">ไม่มีแผนงานในช่วงเวลานี้</td></tr>
                 )}
-                {rows.map((plan, i) => {
+                {shown.map(({ plan, no }) => {
                   const team = (plan.work_plan_members ?? []).map(m => m.employee?.full_name).filter(Boolean).join(", ");
                   return (
-                    <tr key={plan.id}>
-                      <td className="c" style={{ verticalAlign: "top" }}>{String(i + 1).padStart(3, "0")}</td>
+                    <tr key={plan.id} className={anyPicked && !picked.includes(plan.id) ? "no-print row-dim" : undefined}>
+                      <td className="c" style={{ verticalAlign: "top" }}>{String(no).padStart(3, "0")}</td>
                       <td className="c" style={{ verticalAlign: "top" }}>{fmtDate(plan.start_at)}<br /><small>{fmtTime(plan.start_at)} น.</small></td>
                       <td className="c" style={{ verticalAlign: "top" }}>{fmtDate(plan.end_at)}<br /><small>{fmtTime(plan.end_at)} น.</small></td>
                       <td className="col-title" style={{ fontWeight: 600, verticalAlign: "top" }}>{plan.title}</td>
@@ -183,6 +217,9 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
                       <td className="c" style={{ verticalAlign: "top" }}><span className="badge" style={{ margin: 0, background: approvalOf(plan).bg, color: approvalOf(plan).fg }}>{approvalOf(plan).label}</span></td>
                       <td className="no-print" style={{ verticalAlign: "top" }}>
                         <button className="detail-btn" onClick={() => setSelected(plan)}>ดูรายละเอียด</button>
+                      </td>
+                      <td className="no-print c" style={{ verticalAlign: "top" }}>
+                        <input type="checkbox" className="pick-box" aria-label={`พิมพ์รายการที่ ${no}`} checked={picked.includes(plan.id)} onChange={() => togglePick(plan.id)} />
                       </td>
                     </tr>
                   );
