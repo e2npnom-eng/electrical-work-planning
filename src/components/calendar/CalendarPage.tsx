@@ -188,11 +188,11 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
       && new Date(o.start_at).getTime() < t1 && new Date(o.end_at).getTime() > t0
       && (o.location.trim().toLowerCase() === place || people(o).some(id => mine.includes(id))));
     const rank = clash.length ? 1 + clash.filter(o => ord(o) < ord(p) || (ord(o) === ord(p) && o.id < p.id)).length : 0;
-    const who = p.creator?.full_name ? ` · วางโดย ${p.creator.full_name.split(" ")[0]}` : "";
+    const who = p.creator?.full_name ? `วางโดย ${p.creator.full_name}` : "";
     return {
-      id: p.id, title: `${rank ? `#${rank} ` : ""}${typeIcon(p.work_type)} ${p.title}${who}`,
-      start: p.start_at, end: p.end_at, backgroundColor: c.bg, textColor: c.fg, borderColor: c.dot,
-      classNames: p.status === "cancelled" ? ["ev-cancelled"] : [], extendedProps: { plan: p, created: ord(p) }
+      id: p.id, title: `${rank ? `#${rank} ` : ""}${typeIcon(p.work_type)} ${p.title}`, display: "block",
+      start: p.start_at, end: p.end_at, backgroundColor: c.solid, textColor: c.onSolid, borderColor: c.solid,
+      classNames: p.status === "cancelled" ? ["ev-cancelled"] : [], extendedProps: { plan: p, created: ord(p), who }
     };
   }), [filtered, plans]);
 
@@ -331,11 +331,11 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
             headerToolbar={{ left: "prev,next today", center: "title", right: isMobile ? "dayGridMonth,listMonth" : "dayGridMonth,timeGridWeek,listMonth" }}
             buttonText={{ today: "วันนี้", month: "เดือน", week: "สัปดาห์", day: "วัน", list: "รายการ" }}
             locale={thLocale} height="auto" events={events} eventClick={onEventClick} dateClick={onDateClick}
-            datesSet={onDatesSet} eventOrder={(x, y) => String((x as { extendedProps?: { created?: string } }).extendedProps?.created ?? "").localeCompare(String((y as { extendedProps?: { created?: string } }).extendedProps?.created ?? ""))} dayMaxEvents={3} nowIndicator editable={false} />
+            eventDidMount={arg => { arg.el.title = `${arg.event.title}\n${String(arg.event.extendedProps.who ?? "")}`; }} datesSet={onDatesSet} eventOrder={(x, y) => String((x as { extendedProps?: { created?: string } }).extendedProps?.created ?? "").localeCompare(String((y as { extendedProps?: { created?: string } }).extendedProps?.created ?? ""))} dayMaxEvents={3} nowIndicator editable={false} />
         </div>
         <div className="legend">
           {(Object.keys(APPROVALS) as ApprovalStatus[]).map(k => (
-            <span key={k}><i style={{ background: APPROVALS[k].dot }} />{APPROVALS[k].label}</span>
+            <span key={k}><i style={{ background: APPROVALS[k].solid }} />{APPROVALS[k].label}</span>
           ))}
           <span className="muted">· งานที่ยกเลิกจะขีดฆ่า · ไอคอนหน้าชื่อบอกประเภทงาน</span>
         </div>
