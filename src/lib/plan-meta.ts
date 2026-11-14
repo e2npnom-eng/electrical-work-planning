@@ -22,11 +22,11 @@ export const WORK_STATUSES: { value: WorkStatus; label: string }[] = [
   { value: "cancelled", label: "ยกเลิก" }
 ];
 
-export const APPROVALS: Record<ApprovalStatus, { label: string; bg: string; fg: string; dot: string }> = {
-  draft: { label: "ร่าง", bg: "#E9E6EF", fg: "#4F4860", dot: "#8A8299" },
-  pending: { label: "รออนุมัติ", bg: "#FCE6BC", fg: "#6B4200", dot: "#F5A623" },
-  approved: { label: "อนุมัติแล้ว", bg: "#CFEFEA", fg: "#0B4F49", dot: "#0F766E" },
-  returned: { label: "ส่งกลับแก้ไข", bg: "#F8D7D2", fg: "#7A1D12", dot: "#C0392B" }
+export const APPROVALS: Record<ApprovalStatus, { label: string; bg: string; fg: string; dot: string; solid: string; onSolid: string }> = {
+  draft: { label: "ร่าง", bg: "#E9E6EF", fg: "#4F4860", dot: "#7C7491", solid: "#7C7491", onSolid: "#FFFFFF" },
+  pending: { label: "รออนุมัติ", bg: "#FCE6BC", fg: "#6B4200", dot: "#F5A623", solid: "#F5A623", onSolid: "#2A1450" },
+  approved: { label: "อนุมัติแล้ว", bg: "#CFEFEA", fg: "#0B4F49", dot: "#0F766E", solid: "#0F766E", onSolid: "#FFFFFF" },
+  returned: { label: "ส่งกลับแก้ไข", bg: "#F8D7D2", fg: "#7A1D12", dot: "#C0392B", solid: "#C0392B", onSolid: "#FFFFFF" }
 };
 
 export const ROLE_LABELS: Record<Role, string> = {
