@@ -123,3 +123,12 @@
   .sheet-table th:nth-child(2), .sheet-table th:nth-child(3), .sheet-table td:nth-child(2), .sheet-table td:nth-child(3) { min-width: 92px; width: 92px; }
   .sheet-table td .badge { margin-top: 0; }
 }
+
+/* เลือกพิมพ์เฉพาะบางรายการ */
+.range-field { margin: 0; min-width: 0; }
+.range-row { display: flex; align-items: center; gap: 8px; }
+.range-row input { width: 92px; min-height: 48px; padding: 0 12px; border: 1px solid #cfc7dd; border-radius: 12px; font-size: 16px; }
+.pick-box { width: 20px; height: 20px; accent-color: var(--brand); }
+.pick-all { display: flex; align-items: center; gap: 6px; justify-content: center; font-weight: 600; }
+.pick-all input { width: 18px; height: 18px; accent-color: var(--brand); }
+.row-dim { opacity: 0.45; }
