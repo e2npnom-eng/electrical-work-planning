@@ -95,6 +95,9 @@
   .sheet-table td { padding: 8px 6px; line-height: 1.45; overflow-wrap: anywhere; vertical-align: middle; }
   .sheet-table th:first-child, .sheet-table td:first-child { width: 36px; text-align: center; white-space: nowrap; padding-left: 2px; padding-right: 2px; }
   .sheet-table td.c { text-align: center; }
+  .sheet-table .col-title { width: 36%; }
+  .sheet-table .col-ctrl { width: 24%; white-space: nowrap; }
+  .sheet-table .col-place { width: 16%; }
   .sheet-table th:nth-child(2), .sheet-table th:nth-child(3),
   .sheet-table td:nth-child(2), .sheet-table td:nth-child(3) { white-space: nowrap; }
   .sheet-table .badge { padding: 2px 8px; font-size: 11px; white-space: nowrap; }
