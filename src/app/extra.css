@@ -73,10 +73,7 @@
 .fc .fc-daygrid-block-event .fc-event-time, .fc .fc-daygrid-block-event .fc-event-title { font-weight: 600; }
 
 
-/* ===== ใบตารางงาน: ลายเซ็น ===== */
-.sign-row .sign-name { height: 40px; display: flex; align-items: flex-end; justify-content: center; font-size: 14px; letter-spacing: 1px; }
-.sign-row .sign-line { height: 34px; width: 88%; margin: 0 auto 8px; border-bottom: 1.5px dotted #555; }
-.sign-row b { font-size: 15px; font-weight: 600; }
+/* ===== ใบตารางงาน: ลายเซ็น (แบบเดียวกับใบส่งของ) ===== */
 .sheet-table th { text-align: center; vertical-align: middle; }
 
 /* ===== พิมพ์ / PDF: A4 แนวตั้ง ===== */
@@ -93,7 +90,7 @@
   .sheet-table { width: 100%; table-layout: auto; font-size: 12px; }
   .sheet-table th { white-space: normal; font-size: 12px; padding: 8px 6px; text-align: center; vertical-align: middle; }
   .sheet-table td { padding: 8px 6px; line-height: 1.45; overflow-wrap: anywhere; vertical-align: middle; }
-  .sheet-table th:first-child, .sheet-table td:first-child { width: 36px; text-align: center; white-space: nowrap; padding-left: 2px; padding-right: 2px; }
+  .sheet-table th:first-child, .sheet-table td:first-child { width: 42px; text-align: center; white-space: nowrap; padding-left: 2px; padding-right: 2px; }
   .sheet-table td.c { text-align: center; }
   .sheet-table .col-title { width: 36%; }
   .sheet-table .col-ctrl { width: 24%; white-space: nowrap; }
@@ -102,9 +99,20 @@
   .sheet-table td:nth-child(2), .sheet-table td:nth-child(3) { white-space: nowrap; }
   .sheet-table .badge { padding: 2px 8px; font-size: 11px; white-space: nowrap; }
   .sheet-table small { font-size: 10.5px; }
-  .sign-row { margin-top: auto; padding-top: 36px; gap: 12px; }
-  .sign-row > div { min-width: 0; flex: 1; }
-  .sign-row .sign-line { height: 30px; }
   .print-footer { left: 12mm; bottom: 7mm; font-size: 11px; }
   .toast, .filters, .today-grid { display: none !important; }
+}
+
+.sign-row { display: flex; gap: 28px; margin-top: 48px; }
+.sg { flex: 1; min-width: 0; font-size: 14px; }
+.sg-title { text-align: center; font-weight: 700; margin-bottom: 6px; }
+.sg-row { display: flex; align-items: flex-end; gap: 6px; height: 38px; }
+.sg-label { flex: none; line-height: 1.2; padding-bottom: 3px; }
+.sg-fill { flex: 1; min-width: 0; height: 100%; border-bottom: 1.5px dotted #444; }
+.sheet-table th:first-child, .sheet-table td:first-child { font-size: 12px; font-weight: 400; }
+@media print {
+  .sign-row { margin-top: auto; padding-top: 30px; gap: 20px; break-inside: avoid; }
+  .sg { font-size: 12.5px; }
+  .sg-row { height: 36px; }
+  .sheet-table th:first-child, .sheet-table td:first-child { font-size: 11px; font-weight: 400; }
 }
