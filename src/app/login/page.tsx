@@ -2,12 +2,13 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
+// สีตัวอย่างตรงกับปฏิทินหน้าแรก: อนุมัติแล้ว (เขียว) / รออนุมัติ (ส้ม) / ร่าง (เทา)
 const week = [
-  { d: "จ.", chips: [["ตรวจสอบ", "done"]] },
-  { d: "อ.", chips: [["บำรุงรักษา", "done"], ["ก่อสร้าง", "plan"]] },
-  { d: "พ.", chips: [["แก้ไขเหตุขัดข้อง", "prog"]] },
-  { d: "พฤ.", chips: [["ตรวจสอบ", "plan"]] },
-  { d: "ศ.", chips: [["บำรุงรักษา", "plan"], ["ก่อสร้าง", "plan"]] }
+  { d: "จ.", chips: [["ตรวจสอบ", "a-approved"]] },
+  { d: "อ.", chips: [["บำรุงรักษา", "a-approved"], ["ก่อสร้าง", "a-pending"]] },
+  { d: "พ.", chips: [["แก้ไขเหตุขัดข้อง", "a-pending"]] },
+  { d: "พฤ.", chips: [["ตรวจสอบ", "a-draft"]] },
+  { d: "ศ.", chips: [["บำรุงรักษา", "a-approved"], ["ก่อสร้าง", "a-draft"]] }
 ];
 
 export default async function LoginPage() {
@@ -25,7 +26,7 @@ export default async function LoginPage() {
           <span style={{ fontSize: 17, fontWeight: 600 }}>ผปบ.กฟจ.นครพนม</span>
         </div>
         <div>
-          <h2>ทุกแผนงานไฟฟ้าของทีม อยู่ในปฏิทินเดียว</h2>
+          <h2>ทุกแผนงานไฟฟ้าของแผนก อยู่ในปฏิทินเดียว</h2>
           <p>ดูงานของทั้งทีม วางแผนล่วงหน้า และอัปเดตสถานะได้ทันที</p>
           <div className="hero-week" aria-hidden="true">
             {week.map(col => (
