@@ -195,9 +195,9 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
           </div>
 
           <div className="sign-row">
-            <div><div className="sign-line" />ผู้จัดทำ<br /><small>(.......................................)</small></div>
-            <div><div className="sign-line" />ผู้ตรวจสอบ<br /><small>(.......................................)</small></div>
-            <div><div className="sign-line" />ผู้อนุมัติ<br /><small>(.......................................)</small></div>
+            <div><div className="sign-name">(.......................................)</div><div className="sign-line" /><b>ผู้จัดทำ</b></div>
+            <div><div className="sign-name">(.......................................)</div><div className="sign-line" /><b>ผู้ตรวจสอบ</b></div>
+            <div><div className="sign-name">(.......................................)</div><div className="sign-line" /><b>ผู้อนุมัติ</b></div>
           </div>
           <div className="print-footer">การไฟฟ้าส่วนภูมิภาคจังหวัดนครพนม</div>
         </section>
