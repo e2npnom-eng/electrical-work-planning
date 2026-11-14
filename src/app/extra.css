@@ -1,0 +1,68 @@
+/* ===== ส่วนเสริมของเวอร์ชัน 2 (อนุมัติแผน / หน้าวันนี้ / ตัวกรอง) ===== */
+.today-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.today-col { padding: 18px; }
+.today-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.today-head h2 { margin: 0; font-size: 18px; font-weight: 700; }
+.today-head h2 small { font-size: 13px; font-weight: 500; color: var(--muted); margin-left: 6px; }
+.count-pill { display: inline-block; min-width: 24px; padding: 0 8px; border-radius: 12px; background: var(--amber); color: var(--deep); font-size: 14px; text-align: center; }
+.today-item {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; margin-bottom: 8px;
+  border: 1px solid var(--line); border-radius: 12px; background: #fff; text-align: left;
+}
+.today-item:hover { background: var(--bg); }
+.today-time { flex: none; width: 84px; font-size: 13px; font-weight: 600; color: var(--brand); }
+.today-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.today-main b { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.today-main small { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mini-badge { flex: none; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.seg { display: inline-flex; border: 1px solid #d8d0e6; border-radius: 10px; overflow: hidden; }
+.seg button { min-height: 32px; padding: 0 12px; border: 0; background: #fff; font-size: 13px; font-weight: 600; color: #4a3d66; }
+.seg button[aria-pressed="true"] { background: var(--deep); color: #fff; }
+
+.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 16px; }
+.filters input[type="search"], .filters select {
+  min-height: 42px; padding: 0 14px; border: 1px solid #cfc7dd; border-radius: 12px; background: #fff; font-size: 15px;
+}
+.filters input[type="search"] { flex: 1 1 240px; min-width: 0; }
+.filters .check-inline { min-height: 42px; }
+.filter-count { margin-left: auto; font-size: 13px; }
+
+.ev-cancelled, .fc .ev-cancelled { text-decoration: line-through; opacity: 0.6; }
+.fc .fc-event { cursor: pointer; }
+.fc .fc-daygrid-day:hover { background: #fbf9fe; cursor: pointer; }
+
+.badge.a-draft, .badge.a-pending, .badge.a-approved, .badge.a-returned { margin-bottom: 12px; }
+.note-box, .warn-box, .ok-box { margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; font-size: 14px; line-height: 1.6; }
+.note-box { background: var(--brand-soft); color: #3f1c66; }
+.warn-box { background: #fff3d6; color: #6b4200; border: 1px solid #f3d38a; }
+.warn-box ul { margin: 6px 0 0; padding-left: 20px; }
+.warn-box li { margin-bottom: 6px; }
+.ok-box { background: #e3f6f2; color: #0b4f49; }
+.repeat-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; font-size: 14px; }
+.repeat-row input { width: 80px; min-height: 40px; padding: 0 10px; border: 1px solid #cfc7dd; border-radius: 10px; }
+
+.history { margin-top: 20px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.log-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
+.log-list small { margin-left: 8px; color: var(--muted); }
+
+.row-select { min-height: 38px; padding: 0 10px; border: 1px solid #cfc7dd; border-radius: 10px; background: #fff; font-size: 14px; }
+.toast {
+  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 80;
+  padding: 12px 22px; border-radius: 999px; background: var(--deep); color: #fff; font-size: 15px; font-weight: 600;
+  box-shadow: 0 8px 24px rgba(42, 20, 80, 0.3);
+}
+.sb-item { position: relative; }
+.sb-badge {
+  margin-left: auto; min-width: 22px; padding: 0 7px; border-radius: 11px; background: var(--amber); color: var(--deep);
+  font-size: 12px; font-weight: 700; text-align: center; line-height: 22px;
+}
+@media (min-width: 901px) {
+  .sidebar.collapsed .sb-badge { position: absolute; top: 2px; right: 4px; min-width: 18px; line-height: 18px; font-size: 11px; padding: 0 5px; }
+}
+@media (max-width: 700px) {
+  .today-time { width: 70px; }
+  .filter-count { margin-left: 0; width: 100%; }
+}
+@media print {
+  .toast, .filters, .today-grid { display: none !important; }
+}

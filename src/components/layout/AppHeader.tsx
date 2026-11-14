@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { ROLE_LABELS } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
 
 const svgProps = {
@@ -20,6 +21,10 @@ const NAV: { href: string; label: string; icon: ReactNode }[] = [
   {
     href: "/my-schedule", label: "ตารางงานของฉัน",
     icon: <svg {...svgProps}><rect x="3.5" y="4" width="17" height="16" rx="2.5" /><path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5V20" /></svg>
+  },
+  {
+    href: "/account", label: "บัญชีของฉัน",
+    icon: <svg {...svgProps}><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
   }
 ];
 
@@ -27,6 +32,13 @@ export function AppHeader({ profile }: { profile: EmployeeProfile }) {
   const router = useRouter();
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [pending, setPending] = useState(0);
+
+  useEffect(() => {
+    if (profile.role !== "admin") return;
+    void createClient().from("work_plans").select("id", { count: "exact", head: true })
+      .eq("approval_status", "pending").then(({ count }) => setPending(count ?? 0));
+  }, [profile.role, pathname]);
 
   useEffect(() => {
     try { if (localStorage.getItem("sb-collapsed") === "1") setCollapsed(true); } catch { /* ignore */ }
@@ -73,6 +85,7 @@ export function AppHeader({ profile }: { profile: EmployeeProfile }) {
             <Link key={item.href} href={item.href} className="sb-item" title={item.label}
               aria-current={pathname === item.href ? "page" : undefined}>
               {item.icon}<span className="sb-label">{item.label}</span>
+              {item.href === "/calendar" && pending > 0 && <span className="sb-badge" aria-label={`รออนุมัติ ${pending} รายการ`}>{pending}</span>}
             </Link>
           ))}
         </div>
@@ -93,7 +106,7 @@ export function AppHeader({ profile }: { profile: EmployeeProfile }) {
           <span className="sb-avatar" aria-hidden="true">{profile.full_name.charAt(0)}</span>
           <span className="sb-user-info sb-label">
             <b>{profile.full_name}</b>
-            <small>{profile.employee_code} · {profile.role === "admin" ? "ผู้ดูแลระบบ" : "พนักงาน"}</small>
+            <small>{profile.employee_code} · {ROLE_LABELS[profile.role]}</small>
           </span>
         </div>
         <button className="sb-logout" onClick={signOut} title="ออกจากระบบ" aria-label="ออกจากระบบ">

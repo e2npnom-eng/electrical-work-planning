@@ -3,22 +3,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PlanDetail } from "@/components/plans/PlanDetail";
+import { PLAN_SELECT, approvalOf, canViewAll, fmtDate, fmtTime, statusLabel } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
 import type { WorkPlan } from "@/types/plan";
-
-const STATUS_LABELS: Record<string, string> = {
-  planned: "วางแผนแล้ว", in_progress: "กำลังดำเนินการ", completed: "เสร็จสิ้น", cancelled: "ยกเลิก"
-};
-
-const fmtDate = (v: string) =>
-  new Date(v).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
-const fmtTime = (v: string) =>
-  new Date(v).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
 
 export function MySchedule({ profile }: { profile: EmployeeProfile }) {
   const supabase = useMemo(() => createClient(), []);
   const [plans, setPlans] = useState<WorkPlan[]>([]);
-  const empId = profile.id;
+  const viewAll = canViewAll(profile.role);
+  const [people, setPeople] = useState<EmployeeProfile[]>([]);
+  const [empId, setEmpId] = useState(profile.id);
+  const [approvedOnly, setApprovedOnly] = useState(false);
   const [month, setMonth] = useState("");
   const [allMonths, setAllMonths] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -31,42 +26,47 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
   }, []);
 
   useEffect(() => {
+    if (!viewAll) return;
+    void supabase.from("employees").select("id, employee_code, full_name, role, active")
+      .eq("active", true).order("full_name")
+      .then(({ data }) => { if (data) setPeople(data as EmployeeProfile[]); });
+  }, [supabase, viewAll]);
+
+  useEffect(() => {
+    if (!allMonths && month === "") return;
     let cancelled = false;
     async function load() {
-      const [planResult] = await Promise.all([
-        supabase.from("work_plans").select("*, controller:employees!work_plans_controller_id_fkey(id, full_name, employee_code), creator:employees!work_plans_created_by_fkey(id, full_name, employee_code), work_plan_members(employee_id, employee:employees(id, full_name, employee_code))").order("start_at")
-      ]);
+      setLoading(true);
+      let query = supabase.from("work_plans").select(PLAN_SELECT).order("start_at");
+      if (!allMonths) {
+        const [y, m] = month.split("-").map(Number);
+        query = query.lt("start_at", new Date(y, m, 1).toISOString()).gte("end_at", new Date(y, m - 1, 1).toISOString());
+      }
+      const res = await query;
       if (cancelled) return;
-      if (planResult.error) setError(planResult.error.message);
-      else setPlans((planResult.data ?? []) as unknown as WorkPlan[]);
+      if (res.error) setError(res.error.message);
+      else { setError(""); setPlans((res.data ?? []) as unknown as WorkPlan[]); }
       setLoading(false);
     }
     void load();
     return () => { cancelled = true; };
-  }, [supabase]);
+  }, [supabase, month, allMonths]);
 
-  const emp = profile;
+  const everyone = empId === "all";
+  const emp = everyone ? profile : (people.find(p => p.id === empId) ?? profile);
   const useMonth = !allMonths && month !== "";
 
   const rows = useMemo(() => {
-    let from = 0, to = 0;
-    if (useMonth) {
-      const [y, m] = month.split("-").map(Number);
-      from = new Date(y, m - 1, 1).getTime();
-      to = new Date(y, m, 1).getTime();
-    }
     return plans
       .filter(p => {
+        if (approvedOnly && p.approval_status !== "approved") return false;
+        if (everyone) return true;
         const isController = p.controller_id === empId;
         const isMember = (p.work_plan_members ?? []).some(m => m.employee_id === empId);
-        if (!isController && !isMember) return false;
-        if (useMonth) {
-          return new Date(p.start_at).getTime() < to && new Date(p.end_at).getTime() >= from;
-        }
-        return true;
+        return isController || isMember;
       })
       .map(p => ({ plan: p, role: p.controller_id === empId ? "ผู้ควบคุมงาน" : "ผู้ปฏิบัติงาน" }));
-  }, [plans, empId, month, useMonth]);
+  }, [plans, empId, everyone, approvedOnly]);
 
   const periodLabel = useMonth
     ? (() => { const [y, m] = month.split("-").map(Number); return new Date(y, m - 1, 1).toLocaleDateString("th-TH", { month: "long", year: "numeric" }); })()
@@ -78,7 +78,7 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
 
   function exportPdf() {
     const original = document.title;
-    document.title = `ตารางงาน_${emp.employee_code}_${useMonth ? month : "ทั้งหมด"}`;
+    document.title = `ตารางงาน_${everyone ? "ทั้งทีม" : emp.employee_code}_${useMonth ? month : "ทั้งหมด"}`;
     window.addEventListener("afterprint", () => { document.title = original; }, { once: true });
     window.print();
   }
@@ -88,14 +88,22 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
       <div className="page-head no-print">
         <div>
           <h1>ตารางงานของฉัน</h1>
-          <p className="muted" style={{ margin: 0 }}>แผนงานที่พนักงานเป็นผู้ควบคุมงานหรือผู้ปฏิบัติงาน</p>
+          <p className="muted" style={{ margin: 0 }}>{viewAll ? "เลือกดูและพิมพ์ตารางงานของพนักงานแต่ละคน หรือทั้งทีม" : "แผนงานที่คุณเป็นผู้ควบคุมงานหรือผู้ปฏิบัติงาน"}</p>
         </div>
       </div>
 
       <div className="sched-controls no-print">
         <div className="field">
           <label htmlFor="sc-emp">พนักงาน</label>
-          <input id="sc-emp" readOnly value={`${profile.full_name} (${profile.employee_code})`} />
+          {viewAll ? (
+            <select id="sc-emp" value={empId} onChange={e => setEmpId(e.target.value)}>
+              <option value={profile.id}>{profile.full_name} (ฉัน)</option>
+              {profile.role === "admin" && <option value="all">ทุกคน (ทั้งทีม)</option>}
+              {people.filter(p => p.id !== profile.id).map(p => <option key={p.id} value={p.id}>{p.full_name} ({p.employee_code})</option>)}
+            </select>
+          ) : (
+            <input id="sc-emp" readOnly value={`${profile.full_name} (${profile.employee_code})`} />
+          )}
         </div>
         <div className="field">
           <label htmlFor="sc-month">เดือน</label>
@@ -105,6 +113,10 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
         <label className="check-inline">
           <input type="checkbox" checked={allMonths} onChange={e => setAllMonths(e.target.checked)} />
           แสดงทุกเดือน
+        </label>
+        <label className="check-inline">
+          <input type="checkbox" checked={approvedOnly} onChange={e => setApprovedOnly(e.target.checked)} />
+          เฉพาะที่อนุมัติแล้ว
         </label>
         <div className="sched-actions">
           <button className="btn secondary" onClick={printSheet}>
@@ -131,7 +143,7 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
             <div>ผปบ.กฟจ.นครพนม</div>
           </div>
           <div className="sheet-meta">
-            <div><b>ผู้ปฏิบัติงาน:</b> {emp.full_name} ({emp.employee_code})</div>
+            <div><b>ผู้ปฏิบัติงาน:</b> {everyone ? "ทุกคน (ทั้งทีม)" : `${emp.full_name} (${emp.employee_code})`}</div>
             <div><b>ช่วงเวลา:</b> {periodLabel}</div>
             <div><b>จำนวนแผนงาน:</b> {rows.length} รายการ</div>
             <div><b>พิมพ์เมื่อ:</b> {fmtDate(new Date().toISOString())} {fmtTime(new Date().toISOString())} น.</div>
@@ -146,16 +158,17 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
                   <th>วันที่สิ้นสุด</th>
                   <th>ชื่อแผนงาน</th>
                   <th>สถานที่</th>
-                  <th>บทบาท</th>
+                  {!everyone && <th>บทบาท</th>}
                   <th>ผู้ควบคุมงาน</th>
                   <th>ทีมงาน</th>
-                  <th>สถานะ</th>
+                  <th>สถานะงาน</th>
+                  <th>การอนุมัติ</th>
                   <th className="no-print">รายละเอียด</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.length === 0 && (
-                  <tr><td colSpan={10} style={{ textAlign: "center", padding: 28 }} className="muted">ไม่มีแผนงานในช่วงเวลานี้</td></tr>
+                  <tr><td colSpan={everyone ? 10 : 11} style={{ textAlign: "center", padding: 28 }} className="muted">ไม่มีแผนงานในช่วงเวลานี้</td></tr>
                 )}
                 {rows.map(({ plan, role }, i) => {
                   const team = (plan.work_plan_members ?? []).map(m => m.employee?.full_name).filter(Boolean).join(", ");
@@ -166,10 +179,11 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
                       <td>{fmtDate(plan.end_at)}<br /><small>{fmtTime(plan.end_at)} น.</small></td>
                       <td style={{ fontWeight: 600 }}>{plan.title}</td>
                       <td>{plan.location}</td>
-                      <td>{role}</td>
+                      {!everyone && <td>{role}</td>}
                       <td>{plan.controller?.full_name ?? "-"}</td>
                       <td>{team || "-"}</td>
-                      <td><span className={`badge s-${plan.status}`} style={{ margin: 0 }}>{STATUS_LABELS[plan.status] ?? plan.status}</span></td>
+                      <td><span className={`badge s-${plan.status}`} style={{ margin: 0 }}>{statusLabel(plan.status)}</span></td>
+                      <td><span className="badge" style={{ margin: 0, background: approvalOf(plan).bg, color: approvalOf(plan).fg }}>{approvalOf(plan).label}</span></td>
                       <td className="no-print">
                         <button className="detail-btn" onClick={() => setSelected(plan)}>ดูรายละเอียด</button>
                       </td>
