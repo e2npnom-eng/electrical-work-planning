@@ -67,39 +67,41 @@
   .toast, .filters, .today-grid { display: none !important; }
 }
 
-/* ลายเซ็น: วงเล็บชื่อ -> เส้นประยาว -> ตัวอักษรหัวข้อ */
-.sign-row .sign-name { height: 40px; display: flex; align-items: flex-end; justify-content: center; font-size: 14px; letter-spacing: 1px; }
-.sign-row .sign-line { height: 0; margin: 6px auto 8px; width: 100%; border-bottom: 1.5px dotted #555; }
-.sign-row b { font-size: 15px; font-weight: 600; }
-
-/* ===== พิมพ์แนวตั้ง A4 (Portrait) ===== */
-@page { size: A4 portrait; margin: 0; }
-@media print {
-  .page { padding: 10mm 8mm 16mm; }
-  .sheet-title { min-height: 64px; margin-bottom: 10px; }
-  .sheet-logo { width: 60px; height: 60px; }
-  .sheet-title h2 { font-size: 18px; }
-  .sheet-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); font-size: 11px; gap: 4px 16px; margin-bottom: 10px; }
-  .sheet-table { width: 100%; table-layout: auto; font-size: 9px; }
-  .sheet-table th, .sheet-table td { padding: 3px 4px; line-height: 1.35; overflow-wrap: anywhere; }
-  .sheet-table th { white-space: normal; font-size: 9px; }
-  .sheet-table .badge { padding: 1px 6px; font-size: 8.5px; white-space: nowrap; }
-  .sheet-table small { font-size: 8.5px; }
-  .sign-row { gap: 8px; margin-top: 28px; }
-  .sign-row > div { min-width: 0; flex: 1; }
-  .print-footer { left: 8mm; bottom: 6mm; font-size: 10px; }
-}
-@media print {
-  .sheet-table th:first-child { width: 22px !important; }
-  .sheet-table td:nth-child(2), .sheet-table td:nth-child(3) { white-space: nowrap; }
-  .sheet-table th:nth-child(2), .sheet-table th:nth-child(3) { white-space: nowrap; }
-  .sign-row .sign-line { width: 88%; }
-}
 
 /* ปฏิทิน: ป้ายแผนงานสีทึบ อ่านชัดบนพื้นขาว */
 .fc .fc-daygrid-event, .fc .fc-timegrid-event { box-shadow: 0 1px 2px rgba(42, 20, 80, 0.18); }
 .fc .fc-daygrid-block-event .fc-event-time, .fc .fc-daygrid-block-event .fc-event-title { font-weight: 600; }
 
-/* เส้นประยาว = ที่เขียนตำแหน่ง: เว้นช่องว่างเหนือเส้นให้เขียนได้ */
-.sign-row .sign-line { height: 34px; margin: 0 auto 8px; }
-@media print { .sign-row .sign-line { height: 26px; } }
+
+/* ===== ใบตารางงาน: ลายเซ็น ===== */
+.sign-row .sign-name { height: 40px; display: flex; align-items: flex-end; justify-content: center; font-size: 14px; letter-spacing: 1px; }
+.sign-row .sign-line { height: 34px; width: 88%; margin: 0 auto 8px; border-bottom: 1.5px dotted #555; }
+.sign-row b { font-size: 15px; font-weight: 600; }
+.sheet-table th { text-align: center; vertical-align: middle; }
+
+/* ===== พิมพ์ / PDF: A4 แนวตั้ง ===== */
+@page { size: A4 portrait; margin: 0; }
+@media print {
+  .page { padding: 12mm 12mm 16mm; }
+  .sheet { display: flex; flex-direction: column; min-height: 266mm; }
+  .sheet-title { min-height: 80px; margin-bottom: 14px; }
+  .sheet-logo { width: 72px; height: 72px; }
+  .sheet-title h2 { font-size: 22px; margin-bottom: 2px; }
+  .sheet-title div { font-size: 14px; }
+  .sheet-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); font-size: 12.5px; gap: 6px 20px; margin-bottom: 14px; }
+  .sheet-table-wrap { overflow: visible; }
+  .sheet-table { width: 100%; table-layout: auto; font-size: 12px; }
+  .sheet-table th { white-space: normal; font-size: 12px; padding: 8px 6px; text-align: center; vertical-align: middle; }
+  .sheet-table td { padding: 8px 6px; line-height: 1.45; overflow-wrap: anywhere; vertical-align: middle; }
+  .sheet-table th:first-child, .sheet-table td:first-child { width: 36px; text-align: center; white-space: nowrap; padding-left: 2px; padding-right: 2px; }
+  .sheet-table td.c { text-align: center; }
+  .sheet-table th:nth-child(2), .sheet-table th:nth-child(3),
+  .sheet-table td:nth-child(2), .sheet-table td:nth-child(3) { white-space: nowrap; }
+  .sheet-table .badge { padding: 2px 8px; font-size: 11px; white-space: nowrap; }
+  .sheet-table small { font-size: 10.5px; }
+  .sign-row { margin-top: auto; padding-top: 36px; gap: 12px; }
+  .sign-row > div { min-width: 0; flex: 1; }
+  .sign-row .sign-line { height: 30px; }
+  .print-footer { left: 12mm; bottom: 7mm; font-size: 11px; }
+  .toast, .filters, .today-grid { display: none !important; }
+}
