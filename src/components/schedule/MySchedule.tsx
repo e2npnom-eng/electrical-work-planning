@@ -172,7 +172,7 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
                   const team = (plan.work_plan_members ?? []).map(m => m.employee?.full_name).filter(Boolean).join(", ");
                   return (
                     <tr key={plan.id}>
-                      <td className="c">{i + 1}</td>
+                      <td className="c">{String(i + 1).padStart(3, "0")}</td>
                       <td className="c">{fmtDate(plan.start_at)}<br /><small>{fmtTime(plan.start_at)} น.</small></td>
                       <td className="c">{fmtDate(plan.end_at)}<br /><small>{fmtTime(plan.end_at)} น.</small></td>
                       <td className="col-title" style={{ fontWeight: 600 }}>{plan.title}</td>
@@ -192,9 +192,15 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
           </div>
 
           <div className="sign-row">
-            <div><div className="sign-name">(.......................................)</div><div className="sign-line" /><b>ผู้จัดทำ</b></div>
-            <div><div className="sign-name">(.......................................)</div><div className="sign-line" /><b>ผู้ตรวจสอบ</b></div>
-            <div><div className="sign-name">(.......................................)</div><div className="sign-line" /><b>ผู้อนุมัติ</b></div>
+            {["ผู้จัดทำ", "ผู้ตรวจสอบ", "ผู้อนุมัติ"].map(t => (
+              <div className="sg" key={t}>
+                <div className="sg-title">ลงนาม{t}</div>
+                <div className="sg-row"><span className="sg-label">(ลงชื่อ)</span><span className="sg-fill" /></div>
+                <div className="sg-row"><span className="sg-label">(</span><span className="sg-fill" /><span className="sg-label">)</span></div>
+                <div className="sg-row"><span className="sg-label">ตำแหน่ง</span><span className="sg-fill" /></div>
+                <div className="sg-row"><span className="sg-fill" /><span className="sg-label">/</span><span className="sg-fill" /><span className="sg-label">/</span><span className="sg-fill" /></div>
+              </div>
+            ))}
           </div>
           <div className="print-footer">การไฟฟ้าส่วนภูมิภาคจังหวัดนครพนม</div>
         </section>
