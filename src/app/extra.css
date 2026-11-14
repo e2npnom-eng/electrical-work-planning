@@ -89,11 +89,11 @@
   .sheet-table-wrap { overflow: visible; }
   .sheet-table { width: 100%; table-layout: auto; font-size: 12px; }
   .sheet-table th { white-space: normal; font-size: 12px; padding: 8px 6px; text-align: center; vertical-align: middle; }
-  .sheet-table td { padding: 8px 6px; line-height: 1.45; overflow-wrap: anywhere; vertical-align: middle; }
+  .sheet-table td { padding: 8px 6px; line-height: 1.45; overflow-wrap: anywhere; vertical-align: top !important; }
   .sheet-table th:first-child, .sheet-table td:first-child { width: 42px; text-align: center; white-space: nowrap; padding-left: 2px; padding-right: 2px; }
   .sheet-table td.c { text-align: center; }
-  .sheet-table .col-title { width: 36%; }
-  .sheet-table .col-ctrl { width: 24%; white-space: nowrap; }
+  .sheet-table .col-title { width: 32%; }
+  .sheet-table .col-ctrl { width: 22%; white-space: nowrap; }
   .sheet-table .col-place { width: 16%; }
   .sheet-table th:nth-child(2), .sheet-table th:nth-child(3),
   .sheet-table td:nth-child(2), .sheet-table td:nth-child(3) { white-space: nowrap; }
@@ -105,7 +105,7 @@
 
 .sign-row { display: flex; gap: 28px; margin-top: 48px; }
 .sg { flex: 1; min-width: 0; font-size: 14px; }
-.sg-title { text-align: center; font-weight: 700; margin-bottom: 6px; }
+.sg-title { text-align: center; font-weight: 700; margin-bottom: 6px; padding: 0 10px 0 58px; }
 .sg-row { display: grid; grid-template-columns: 58px minmax(0, 1fr) 10px; align-items: end; height: 38px; }
 .sg-label { text-align: left; line-height: 1.2; padding-bottom: 3px; white-space: nowrap; }
 .sg-label.sg-open { text-align: right; padding-right: 3px; }
@@ -119,5 +119,7 @@
   .sign-row { margin-top: auto; padding-top: 30px; gap: 20px; break-inside: avoid; }
   .sg { font-size: 12.5px; }
   .sg-row { height: 36px; }
-  .sheet-table th:first-child, .sheet-table td:first-child { font-size: 11px; font-weight: 400; }
+  .sheet-table th:first-child, .sheet-table td:first-child { font-size: 12px; font-weight: 400; }
+  .sheet-table th:nth-child(2), .sheet-table th:nth-child(3), .sheet-table td:nth-child(2), .sheet-table td:nth-child(3) { min-width: 92px; width: 92px; }
+  .sheet-table td .badge { margin-top: 0; }
 }
