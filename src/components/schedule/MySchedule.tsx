@@ -172,16 +172,16 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
                   const team = (plan.work_plan_members ?? []).map(m => m.employee?.full_name).filter(Boolean).join(", ");
                   return (
                     <tr key={plan.id}>
-                      <td className="c">{String(i + 1).padStart(3, "0")}</td>
-                      <td className="c">{fmtDate(plan.start_at)}<br /><small>{fmtTime(plan.start_at)} น.</small></td>
-                      <td className="c">{fmtDate(plan.end_at)}<br /><small>{fmtTime(plan.end_at)} น.</small></td>
-                      <td className="col-title" style={{ fontWeight: 600 }}>{plan.title}</td>
-                      <td className="col-place">{plan.location}</td>
-                                            <td className="col-ctrl">{plan.controller?.full_name ?? "-"}</td>
-                      <td className="no-print">{team || "-"}</td>
-                      <td className="no-print"><span className={`badge s-${plan.status}`} style={{ margin: 0 }}>{statusLabel(plan.status)}</span></td>
-                      <td className="c"><span className="badge" style={{ margin: 0, background: approvalOf(plan).bg, color: approvalOf(plan).fg }}>{approvalOf(plan).label}</span></td>
-                      <td className="no-print">
+                      <td className="c" style={{ verticalAlign: "top" }}>{String(i + 1).padStart(3, "0")}</td>
+                      <td className="c" style={{ verticalAlign: "top" }}>{fmtDate(plan.start_at)}<br /><small>{fmtTime(plan.start_at)} น.</small></td>
+                      <td className="c" style={{ verticalAlign: "top" }}>{fmtDate(plan.end_at)}<br /><small>{fmtTime(plan.end_at)} น.</small></td>
+                      <td className="col-title" style={{ fontWeight: 600, verticalAlign: "top" }}>{plan.title}</td>
+                      <td className="col-place" style={{ verticalAlign: "top" }}>{plan.location}</td>
+                      <td className="col-ctrl" style={{ verticalAlign: "top" }}>{plan.controller?.full_name ?? "-"}</td>
+                      <td className="no-print" style={{ verticalAlign: "top" }}>{team || "-"}</td>
+                      <td className="no-print" style={{ verticalAlign: "top" }}><span className={`badge s-${plan.status}`} style={{ margin: 0 }}>{statusLabel(plan.status)}</span></td>
+                      <td className="c" style={{ verticalAlign: "top" }}><span className="badge" style={{ margin: 0, background: approvalOf(plan).bg, color: approvalOf(plan).fg }}>{approvalOf(plan).label}</span></td>
+                      <td className="no-print" style={{ verticalAlign: "top" }}>
                         <button className="detail-btn" onClick={() => setSelected(plan)}>ดูรายละเอียด</button>
                       </td>
                     </tr>
