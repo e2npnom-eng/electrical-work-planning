@@ -106,9 +106,14 @@
 .sign-row { display: flex; gap: 28px; margin-top: 48px; }
 .sg { flex: 1; min-width: 0; font-size: 14px; }
 .sg-title { text-align: center; font-weight: 700; margin-bottom: 6px; }
-.sg-row { display: flex; align-items: flex-end; gap: 6px; height: 38px; }
-.sg-label { flex: none; line-height: 1.2; padding-bottom: 3px; }
-.sg-fill { flex: 1; min-width: 0; height: 100%; border-bottom: 1.5px dotted #444; }
+.sg-row { display: grid; grid-template-columns: 58px minmax(0, 1fr) 10px; align-items: end; height: 38px; }
+.sg-label { text-align: left; line-height: 1.2; padding-bottom: 3px; white-space: nowrap; }
+.sg-label.sg-open { text-align: right; padding-right: 3px; }
+.sg-close { padding-left: 3px; }
+.sg-fill { display: block; height: 100%; border-bottom: 1.5px dotted #444; }
+.sg-date { display: flex; align-items: flex-end; height: 100%; gap: 4px; }
+.sg-date .sg-fill { flex: 1; min-width: 0; }
+.sg-date i { font-style: normal; padding-bottom: 3px; }
 .sheet-table th:first-child, .sheet-table td:first-child { font-size: 12px; font-weight: 400; }
 @media print {
   .sign-row { margin-top: auto; padding-top: 30px; gap: 20px; break-inside: avoid; }
