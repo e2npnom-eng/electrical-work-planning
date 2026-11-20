@@ -5,6 +5,7 @@ export const PLAN_SELECT =
   "*, controller:employees!work_plans_controller_id_fkey(id, full_name, employee_code), " +
   "creator:employees!work_plans_created_by_fkey(id, full_name, employee_code), " +
   "approver:employees!work_plans_approved_by_fkey(id, full_name, employee_code), " +
+  "cancel_requester:employees!work_plans_cancel_requested_by_fkey(id, full_name, employee_code), " +
   "work_plan_members(employee_id, employee:employees(id, full_name, employee_code))";
 
 export const WORK_TYPES: { value: string; label: string; icon: string }[] = [
@@ -39,6 +40,10 @@ export const typeLabel = (v: string | null) => WORK_TYPES.find(t => t.value === 
 export const typeIcon = (v: string | null) => WORK_TYPES.find(t => t.value === v)?.icon ?? "📌";
 export const statusLabel = (v: string) => WORK_STATUSES.find(s => s.value === v)?.label ?? v;
 export const approvalOf = (p: Pick<WorkPlan, "approval_status">) => APPROVALS[p.approval_status] ?? APPROVALS.approved;
+
+export const startOfToday = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
+/** งานผ่านวันไปแล้ว = วันสิ้นสุดอยู่ก่อนวันนี้ */
+export const isPastPlan = (p: Pick<WorkPlan, "end_at">) => new Date(p.end_at).getTime() < startOfToday().getTime();
 
 export const canViewAll = (role: Role) => role === "admin" || role === "executive";
 
