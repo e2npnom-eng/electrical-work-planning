@@ -254,3 +254,8 @@
 
   .toast { bottom: calc(150px + env(safe-area-inset-bottom)); max-width: calc(100% - 28px); text-align: center; }
 }
+
+/* งานที่ผ่านวันนั้นไปแล้ว: สีเทาอ่อน แต่ยังมีแถบสีสถานะอนุมัติด้านซ้าย */
+.fc .fc-event.ev-past { font-weight: 500; box-shadow: none; }
+.fc .fc-event.ev-past .fc-event-title, .fc .fc-event.ev-past .fc-event-time { font-weight: 500; }
+.fc .fc-list-event.ev-past td { color: #8b849c; }
