@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PlanDetail } from "@/components/plans/PlanDetail";
-import { PLAN_SELECT, approvalOf, canViewAll, fmtDate, fmtTime, statusLabel } from "@/lib/plan-meta";
+import { PLAN_SELECT, approvalOf, canViewAll, fmtDate, fmtTime } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
 import type { WorkPlan } from "@/types/plan";
 
@@ -37,7 +37,7 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
     let cancelled = false;
     async function load() {
       setLoading(true);
-      let query = supabase.from("work_plans").select(PLAN_SELECT).order("start_at");
+      let query = supabase.from("work_plans").select(PLAN_SELECT).neq("status", "cancelled").order("start_at");
       if (!allMonths) {
         const [y, m] = month.split("-").map(Number);
         query = query.lt("start_at", new Date(y, m, 1).toISOString()).gte("end_at", new Date(y, m - 1, 1).toISOString());
@@ -194,7 +194,6 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
                   <th className="col-place">สถานที่</th>
                                     <th className="col-ctrl">ผู้ควบคุมงาน</th>
                   <th className="no-print">ทีมงาน</th>
-                  <th className="no-print">สถานะงาน</th>
                   <th>การอนุมัติ</th>
                   <th className="no-print">รายละเอียด</th>
                   <th className="no-print"><label className="pick-all"><input type="checkbox" checked={allShownPicked} onChange={toggleAllShown} />พิมพ์</label></th>
@@ -202,7 +201,7 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
               </thead>
               <tbody>
                 {shown.length === 0 && (
-                  <tr><td colSpan={11} style={{ textAlign: "center", padding: 28 }} className="muted">ไม่มีแผนงานในช่วงเวลานี้</td></tr>
+                  <tr><td colSpan={10} style={{ textAlign: "center", padding: 28 }} className="muted">ไม่มีแผนงานในช่วงเวลานี้</td></tr>
                 )}
                 {shown.map(({ plan, no }) => {
                   const team = (plan.work_plan_members ?? []).map(m => m.employee?.full_name).filter(Boolean).join(", ");
@@ -215,7 +214,6 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
                       <td className="col-place" style={{ verticalAlign: "top" }}>{plan.location}</td>
                       <td className="col-ctrl" style={{ verticalAlign: "top" }}>{plan.controller?.full_name ?? "-"}</td>
                       <td className="no-print" style={{ verticalAlign: "top" }}>{team || "-"}</td>
-                      <td className="no-print" style={{ verticalAlign: "top" }}><span className={`badge s-${plan.status}`} style={{ margin: 0 }}>{statusLabel(plan.status)}</span></td>
                       <td className="c" style={{ verticalAlign: "top" }}><span className="badge" style={{ margin: 0, background: approvalOf(plan).bg, color: approvalOf(plan).fg }}>{approvalOf(plan).label}</span></td>
                       <td className="no-print" style={{ verticalAlign: "top" }}>
                         <button className="detail-btn" onClick={() => setSelected(plan)}>ดูรายละเอียด</button>
