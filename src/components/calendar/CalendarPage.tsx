@@ -25,6 +25,7 @@ type Range = { start: string; end: string };
 type Props = { profile: EmployeeProfile; initialPlanId?: string };
 
 const DAY = 86400000;
+const PAST = { bg: "#E4E0EC", fg: "#5F5875" }; // งานที่ผ่านไปแล้ว
 const dayStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const overlaps = (p: WorkPlan, from: Date, to: Date) =>
   new Date(p.start_at).getTime() < to.getTime() && new Date(p.end_at).getTime() > from.getTime();
@@ -188,11 +189,14 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
       && new Date(o.start_at).getTime() < t1 && new Date(o.end_at).getTime() > t0
       && (o.location.trim().toLowerCase() === place || people(o).some(id => mine.includes(id))));
     const rank = clash.length ? 1 + clash.filter(o => ord(o) < ord(p) || (ord(o) === ord(p) && o.id < p.id)).length : 0;
+    const past = t1 < dayStart(new Date()).getTime(); // ผ่านวันนั้นไปแล้ว
     const who = p.creator?.full_name ? `วางโดย ${p.creator.full_name}` : "";
     return {
       id: p.id, title: `${rank ? `#${rank} ` : ""}${typeIcon(p.work_type)} ${p.title}`, display: "block",
-      start: p.start_at, end: p.end_at, backgroundColor: c.solid, textColor: c.onSolid, borderColor: c.solid,
-      classNames: p.status === "cancelled" ? ["ev-cancelled"] : [], extendedProps: { plan: p, created: ord(p), who }
+      start: p.start_at, end: p.end_at,
+      backgroundColor: past ? PAST.bg : c.solid, textColor: past ? PAST.fg : c.onSolid, borderColor: c.solid,
+      classNames: [...(p.status === "cancelled" ? ["ev-cancelled"] : []), ...(past ? ["ev-past"] : [])],
+      extendedProps: { plan: p, created: ord(p), who, past }
     };
   }), [filtered, plans]);
 
@@ -331,12 +335,13 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
             headerToolbar={{ left: "prev,next today", center: "title", right: isMobile ? "dayGridMonth,listMonth" : "dayGridMonth,timeGridWeek,listMonth" }}
             buttonText={{ today: "วันนี้", month: "เดือน", week: "สัปดาห์", day: "วัน", list: "รายการ" }}
             locale={thLocale} height="auto" events={events} eventClick={onEventClick} dateClick={onDateClick}
-            eventDidMount={arg => { arg.el.title = `${arg.event.title}\n${String(arg.event.extendedProps.who ?? "")}`; }} datesSet={onDatesSet} eventOrder={(x, y) => String((x as { extendedProps?: { created?: string } }).extendedProps?.created ?? "").localeCompare(String((y as { extendedProps?: { created?: string } }).extendedProps?.created ?? ""))} dayMaxEvents={3} nowIndicator editable={false} />
+            eventDidMount={arg => { if (arg.event.extendedProps.past) arg.el.style.boxShadow = `inset 4px 0 0 ${arg.event.borderColor}`; arg.el.title = `${arg.event.title}\n${String(arg.event.extendedProps.who ?? "")}`; }} datesSet={onDatesSet} eventOrder={(x, y) => String((x as { extendedProps?: { created?: string } }).extendedProps?.created ?? "").localeCompare(String((y as { extendedProps?: { created?: string } }).extendedProps?.created ?? ""))} dayMaxEvents={3} nowIndicator editable={false} />
         </div>
         <div className="legend">
           {(Object.keys(APPROVALS) as ApprovalStatus[]).map(k => (
             <span key={k}><i style={{ background: APPROVALS[k].solid }} />{APPROVALS[k].label}</span>
           ))}
+          <span><i style={{ background: PAST.bg, boxShadow: "inset 0 0 0 1px #b9b2cc" }} />ผ่านไปแล้ว</span>
           <span className="muted">· งานที่ยกเลิกจะขีดฆ่า · ไอคอนหน้าชื่อบอกประเภทงาน</span>
         </div>
       </section>
