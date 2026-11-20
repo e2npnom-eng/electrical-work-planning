@@ -37,7 +37,7 @@ export function AppHeader({ profile }: { profile: EmployeeProfile }) {
   useEffect(() => {
     if (profile.role !== "admin") return;
     void createClient().from("work_plans").select("id", { count: "exact", head: true })
-      .eq("approval_status", "pending").then(({ count }) => setPending(count ?? 0));
+      .or("approval_status.eq.pending,cancel_requested_at.not.is.null").neq("status", "cancelled").then(({ count }) => setPending(count ?? 0));
   }, [profile.role, pathname]);
 
   useEffect(() => {
