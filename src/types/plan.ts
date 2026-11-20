@@ -20,11 +20,15 @@ export type WorkPlan = {
   submitted_at: string | null;
   review_note: string | null;
   recurrence_group: string | null;
+  cancel_requested_at: string | null;
+  cancel_requested_by: string | null;
+  cancel_reason: string | null;
   created_at?: string;
   updated_at?: string | null;
   controller?: PersonRef | null;
   creator?: PersonRef | null;
   approver?: PersonRef | null;
+  cancel_requester?: PersonRef | null;
   work_plan_members?: { employee_id: string; employee?: PersonRef | null }[];
 };
 
