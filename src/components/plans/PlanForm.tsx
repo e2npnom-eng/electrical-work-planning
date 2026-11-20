@@ -4,11 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
-  APPROVALS, WORK_STATUSES, WORK_TYPES, fmtDateTime, localDateTime, shiftDate
+  APPROVALS, WORK_TYPES, fmtDateTime, localDateTime, shiftDate
 } from "@/lib/plan-meta";
 import type { Repeat } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
-import type { ApprovalStatus, Conflict, WorkPlan, WorkStatus } from "@/types/plan";
+import type { ApprovalStatus, Conflict, WorkPlan } from "@/types/plan";
 
 export type Prefill = {
   title?: string; controller_id?: string; location?: string; start_at?: string; end_at?: string;
@@ -52,7 +52,6 @@ export function PlanForm({ profile, employees, plan, prefill, onClose, onSaved }
   const [endAt, setEndAt] = useState(localDateTime(init.end_at));
   const [workType, setWorkType] = useState(init.work_type);
   const [description, setDescription] = useState(init.description);
-  const [status, setStatus] = useState<WorkStatus>(plan?.status ?? "planned");
   const [memberIds, setMemberIds] = useState<string[]>(init.memberIds);
   const [memberQuery, setMemberQuery] = useState("");
   const [repeat, setRepeat] = useState<Repeat>("none");
@@ -126,7 +125,7 @@ export function PlanForm({ profile, employees, plan, prefill, onClose, onSaved }
     setSaving(true);
     const base = {
       title: title.trim(), controller_id: controllerId, location: location.trim(),
-      work_type: workType, description: description.trim(), status
+      work_type: workType, description: description.trim()
     };
     let planIds: string[] = [];
 
@@ -144,7 +143,7 @@ export function PlanForm({ profile, employees, plan, prefill, onClose, onSaved }
       const rows = Array.from({ length: times }, (_, i) => {
         const s = repeat === "none" ? s0 : shiftDate(s0, repeat, i);
         return {
-          ...base, id: crypto.randomUUID(), created_by: profile.id,
+          ...base, id: crypto.randomUUID(), created_by: profile.id, status: "planned",
           start_at: s.toISOString(), end_at: new Date(s.getTime() + dur).toISOString(),
           approval_status: approvalTarget ?? "draft", recurrence_group: group
         };
@@ -250,16 +249,6 @@ export function PlanForm({ profile, employees, plan, prefill, onClose, onSaved }
               ))}
             </div>
           </div>
-          <div className="field">
-            <span className="field-label">สถานะงาน</span>
-            <div className="chips">
-              {WORK_STATUSES.map(s => (
-                <button type="button" key={s.value} className="choice" aria-pressed={status === s.value}
-                  onClick={() => setStatus(s.value)}>{s.label}</button>
-              ))}
-            </div>
-          </div>
-
           {!plan && (
             <div className="field">
               <span className="field-label">ทำซ้ำ</span>

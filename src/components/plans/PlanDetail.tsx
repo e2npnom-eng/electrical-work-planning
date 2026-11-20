@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { approvalOf, fmtDateTime, statusLabel, typeIcon, typeLabel } from "@/lib/plan-meta";
+import { approvalOf, fmtDateTime, isPastPlan, typeIcon, typeLabel } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
 import type { WorkPlan } from "@/types/plan";
 
@@ -13,12 +13,13 @@ type Log = {
 
 const ACTION_LABELS: Record<string, string> = {
   create: "สร้างแผนงาน", update: "แก้ไขข้อมูล", submit: "ส่งขออนุมัติ", approve: "อนุมัติ",
-  return: "ส่งกลับแก้ไข", withdraw: "ถอนกลับเป็นร่าง", resubmit: "แก้ไขและส่งอนุมัติใหม่", delete: "ลบแผนงาน"
+  return: "ส่งกลับแก้ไข", withdraw: "ถอนกลับเป็นร่าง", resubmit: "แก้ไขและส่งอนุมัติใหม่", delete: "ลบแผนงาน",
+  cancel_request: "ขอยกเลิกแผนงาน", cancel_withdraw: "ถอนคำขอยกเลิก", cancel_reject: "ปฏิเสธคำขอยกเลิก", cancel: "ยกเลิกแผนงาน"
 };
 const FIELD_LABELS: Record<string, string> = {
   title: "ชื่อแผนงาน", location: "สถานที่", start_at: "วันเริ่ม", end_at: "วันสิ้นสุด",
   controller_id: "ผู้ควบคุมงาน", work_type: "ประเภทงาน", status: "สถานะงาน",
-  description: "รายละเอียด", review_note: "หมายเหตุผู้อนุมัติ", recurrence_group: "ชุดงานซ้ำ"
+  description: "รายละเอียด", review_note: "หมายเหตุผู้อนุมัติ", recurrence_group: "ชุดงานซ้ำ", cancel_reason: "เหตุผลการยกเลิก"
 };
 
 type Props = {
@@ -26,15 +27,20 @@ type Props = {
   onClose: () => void; onEdit: () => void; onDelete: () => void;
   onCopy?: () => void; onCopyLink?: () => void;
   onSubmit?: () => void; onApprove?: () => void; onReturn?: (note: string) => void;
+  onCancelRequest?: (reason: string) => void; onCancelWithdraw?: () => void;
+  onCancelApprove?: () => void; onCancelReject?: () => void; onCancelNow?: (reason: string) => void;
   busy?: boolean; actionError?: string;
 };
 
 export function PlanDetail({
   plan, profile, canEdit, canDelete, onClose, onEdit, onDelete,
-  onCopy, onCopyLink, onSubmit, onApprove, onReturn, busy, actionError
+  onCopy, onCopyLink, onSubmit, onApprove, onReturn, busy, actionError,
+  onCancelRequest, onCancelWithdraw, onCancelApprove, onCancelReject, onCancelNow
 }: Props) {
   const supabase = useMemo(() => createClient(), []);
   const [returning, setReturning] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
   const [note, setNote] = useState("");
   const [logs, setLogs] = useState<Log[] | null>(null);
   const [showLogs, setShowLogs] = useState(false);
@@ -42,6 +48,13 @@ export function PlanDetail({
   const ap = approvalOf(plan);
   const isAdmin = profile.role === "admin";
   const members = (plan.work_plan_members ?? []).map(m => m.employee?.full_name).filter(Boolean) as string[];
+  const cancelled = plan.status === "cancelled";
+  const past = isPastPlan(plan);
+  const hasRequest = Boolean(plan.cancel_requested_at) && !cancelled;
+  const isOwner = plan.created_by === profile.id;
+  // ขอยกเลิกได้: ผู้สร้าง, ยังไม่ผ่านวัน, ไม่ใช่ร่าง, ยังไม่ถูกยกเลิก/ไม่มีคำขอค้าง
+  const canRequestCancel = Boolean(onCancelRequest) && isOwner && !isAdmin && !past && !cancelled && !hasRequest && plan.approval_status !== "draft";
+  const canCancelNow = Boolean(onCancelNow) && isAdmin && !cancelled && !hasRequest;
   const canSubmit = onSubmit && (plan.created_by === profile.id || isAdmin) &&
     (plan.approval_status === "draft" || plan.approval_status === "returned");
 
@@ -59,6 +72,7 @@ export function PlanDetail({
   function describe(l: Log) {
     if (!l.changes) return "";
     if (l.action === "return" && l.changes.review_note) return `เหตุผล: ${String(l.changes.review_note.to ?? "")}`;
+    if ((l.action === "cancel_request" || l.action === "cancel") && l.changes.cancel_reason) return `เหตุผล: ${String(l.changes.cancel_reason.to ?? "")}`;
     const names = Object.keys(l.changes).map(k => FIELD_LABELS[k]).filter(Boolean);
     return names.length ? `แก้: ${names.join(", ")}` : "";
   }
@@ -69,7 +83,7 @@ export function PlanDetail({
         <div className="modal-head">
           <div>
             <span className="badge" style={{ background: ap.bg, color: ap.fg }}>{ap.label}</span>{" "}
-            <span className={`badge s-${plan.status}`}>{statusLabel(plan.status)}</span>
+            {cancelled && <span className="badge s-cancelled">ยกเลิกแล้ว</span>}
             <h2>{typeIcon(plan.work_type)} {plan.title}</h2>
           </div>
           <button className="icon-btn" onClick={onClose} aria-label="ปิด">
@@ -77,6 +91,14 @@ export function PlanDetail({
           </button>
         </div>
 
+        {cancelled && <p className="warn-box"><b>แผนงานนี้ถูกยกเลิกแล้ว</b>{plan.cancel_reason ? ` · เหตุผล: ${plan.cancel_reason}` : ""}</p>}
+        {hasRequest && (
+          <p className="warn-box">
+            <b>มีคำขอยกเลิก</b> โดย {plan.cancel_requester?.full_name ?? "-"}
+            {plan.cancel_requested_at ? ` เมื่อ ${fmtDateTime(plan.cancel_requested_at)}` : ""}
+            {plan.cancel_reason ? ` · เหตุผล: ${plan.cancel_reason}` : ""}
+          </p>
+        )}
         {plan.approval_status === "returned" && (
           <p className="warn-box"><b>ถูกส่งกลับแก้ไข:</b> {plan.review_note || "ไม่ได้ระบุเหตุผล"}</p>
         )}
@@ -131,6 +153,22 @@ export function PlanDetail({
             </div>
           </div>
         )}
+        {cancelling && (
+          <div className="field" style={{ marginTop: 16 }}>
+            <label htmlFor="pd-cancel">{isAdmin ? "เหตุผลที่ยกเลิก (ไม่บังคับ)" : "เหตุผลที่ขอยกเลิก (ผู้ดูแลระบบจะเป็นผู้พิจารณา)"}</label>
+            <textarea id="pd-cancel" value={cancelReason} onChange={e => setCancelReason(e.target.value)} placeholder="เช่น งดจ่ายไฟไม่ได้ / เลื่อนไปสัปดาห์หน้า" />
+            <div className="chips">
+              <button className="btn danger" disabled={busy || (!isAdmin && !cancelReason.trim())}
+                onClick={() => { if (isAdmin) onCancelNow?.(cancelReason.trim()); else onCancelRequest?.(cancelReason.trim()); setCancelling(false); setCancelReason(""); }}>
+                {isAdmin ? "ยืนยันยกเลิกแผนงาน" : "ส่งคำขอยกเลิก"}
+              </button>
+              <button className="btn secondary" onClick={() => setCancelling(false)}>ไม่ยกเลิก</button>
+            </div>
+          </div>
+        )}
+        {!isAdmin && isOwner && past && !cancelled && plan.approval_status !== "draft" && (
+          <p className="muted" style={{ fontSize: 13, margin: "12px 0 0" }}>งานผ่านไปแล้ว ไม่สามารถขอยกเลิกได้ หากจำเป็นให้ติดต่อผู้ดูแลระบบ</p>
+        )}
         {actionError && <p className="error" role="alert">{actionError}</p>}
 
         <div className="modal-actions">
@@ -144,6 +182,11 @@ export function PlanDetail({
           {isAdmin && onReturn && plan.approval_status === "pending" && !returning && (
             <button className="btn danger" disabled={busy} onClick={() => setReturning(true)}>ส่งกลับแก้ไข</button>
           )}
+          {canRequestCancel && !cancelling && <button className="btn secondary" disabled={busy} onClick={() => setCancelling(true)}>ขอยกเลิกแผนงาน</button>}
+          {hasRequest && isOwner && !isAdmin && onCancelWithdraw && <button className="btn secondary" disabled={busy} onClick={onCancelWithdraw}>ถอนคำขอยกเลิก</button>}
+          {hasRequest && isAdmin && onCancelApprove && <button className="btn danger" disabled={busy} onClick={onCancelApprove}>อนุมัติให้ยกเลิก</button>}
+          {hasRequest && isAdmin && onCancelReject && <button className="btn secondary" disabled={busy} onClick={onCancelReject}>ปฏิเสธคำขอ</button>}
+          {canCancelNow && !cancelling && <button className="btn secondary" disabled={busy} onClick={() => setCancelling(true)}>ยกเลิกแผนงาน</button>}
           {canDelete && <button className="btn danger" onClick={onDelete}>ลบ</button>}
         </div>
       </section>
