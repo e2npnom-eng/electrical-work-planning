@@ -26,12 +26,14 @@ type Props = { profile: EmployeeProfile; initialPlanId?: string };
 
 const DAY = 86400000;
 const PAST = { bg: "#E4E0EC", fg: "#5F5875" }; // งานที่ผ่านไปแล้ว
+const CANCELLED = { bg: "#F1EFF5", fg: "#8B849C" }; // งานที่ยกเลิกแล้ว
 const dayStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const overlaps = (p: WorkPlan, from: Date, to: Date) =>
   new Date(p.start_at).getTime() < to.getTime() && new Date(p.end_at).getTime() > from.getTime();
 
 function PlanItem({ plan, showWho, onOpen }: { plan: WorkPlan; showWho: boolean; onOpen: (p: WorkPlan) => void }) {
   const ap = approvalOf(plan);
+  const asking = Boolean(plan.cancel_requested_at) && plan.status !== "cancelled";
   const sameDay = dayStart(new Date(plan.start_at)).getTime() === dayStart(new Date(plan.end_at)).getTime();
   return (
     <button className="today-item" onClick={() => onOpen(plan)}>
@@ -40,7 +42,7 @@ function PlanItem({ plan, showWho, onOpen }: { plan: WorkPlan; showWho: boolean;
         <b className={plan.status === "cancelled" ? "ev-cancelled" : undefined}>{typeIcon(plan.work_type)} {plan.title}</b>
         <small>{plan.location}{showWho && plan.controller ? ` · ${plan.controller.full_name}` : ""}</small>
       </span>
-      <span className="mini-badge" style={{ background: ap.bg, color: ap.fg }}>{ap.label}</span>
+      <span className="mini-badge" style={asking ? { background: "#F8D7D2", color: "#7A1D12" } : { background: ap.bg, color: ap.fg }}>{asking ? "ขอยกเลิก" : ap.label}</span>
     </button>
   );
 }
@@ -96,8 +98,9 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
     const [a, b] = await Promise.all([
       supabase.from("work_plans").select(PLAN_SELECT).lt("start_at", e.toISOString()).gt("end_at", s.toISOString())
         .neq("status", "cancelled").order("start_at"),
-      supabase.from("work_plans").select(PLAN_SELECT).in("approval_status", ["pending", "returned"])
-        .order("start_at").limit(50)
+      supabase.from("work_plans").select(PLAN_SELECT)
+        .or("approval_status.in.(pending,returned),cancel_requested_at.not.is.null")
+        .neq("status", "cancelled").order("start_at").limit(50)
     ]);
     if (!a.error) setWindow2((a.data ?? []) as unknown as WorkPlan[]);
     if (!b.error) setAttention((b.data ?? []) as unknown as WorkPlan[]);
@@ -190,13 +193,15 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
       && (o.location.trim().toLowerCase() === place || people(o).some(id => mine.includes(id))));
     const rank = clash.length ? 1 + clash.filter(o => ord(o) < ord(p) || (ord(o) === ord(p) && o.id < p.id)).length : 0;
     const past = t1 < dayStart(new Date()).getTime(); // ผ่านวันนั้นไปแล้ว
+    const cancelled = p.status === "cancelled";
+    const asking = Boolean(p.cancel_requested_at) && !cancelled;
     const who = p.creator?.full_name ? `วางโดย ${p.creator.full_name}` : "";
     return {
-      id: p.id, title: `${rank ? `#${rank} ` : ""}${typeIcon(p.work_type)} ${p.title}`, display: "block",
+      id: p.id, title: `${rank ? `#${rank} ` : ""}${asking ? "⚠ " : ""}${typeIcon(p.work_type)} ${p.title}`, display: "block",
       start: p.start_at, end: p.end_at,
-      backgroundColor: past ? PAST.bg : c.solid, textColor: past ? PAST.fg : c.onSolid, borderColor: c.solid,
+      backgroundColor: cancelled ? CANCELLED.bg : past ? PAST.bg : c.solid, textColor: cancelled ? CANCELLED.fg : past ? PAST.fg : c.onSolid, borderColor: c.solid,
       classNames: [...(p.status === "cancelled" ? ["ev-cancelled"] : []), ...(past ? ["ev-past"] : [])],
-      extendedProps: { plan: p, created: ord(p), who, past }
+      extendedProps: { plan: p, created: ord(p), who, past: past || cancelled }
     };
   }), [filtered, plans]);
 
@@ -207,7 +212,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   const todayList = scoped(window2).filter(p => overlaps(p, today, tomorrow));
   const tomorrowList = scoped(window2).filter(p => overlaps(p, tomorrow, dayAfter));
   const todo = isAdmin
-    ? attention.filter(p => p.approval_status === "pending")
+    ? attention.filter(p => p.approval_status === "pending" || p.cancel_requested_at)
     : attention.filter(p => p.created_by === profile.id);
 
   function closeDetail() {
@@ -256,6 +261,16 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
     await reloadAll();
   }
 
+  async function patchPlan(plan: WorkPlan, patch: Record<string, unknown>, doneMessage: string) {
+    setBusy(true); setActionError("");
+    const { error: e } = await supabase.from("work_plans").update(patch).eq("id", plan.id);
+    setBusy(false);
+    if (e) { setActionError(e.message); return; }
+    showToast(doneMessage);
+    await reloadAll();
+  }
+  const clearRequest = { cancel_requested_at: null, cancel_requested_by: null, cancel_reason: null };
+
   async function deletePlan(plan: WorkPlan) {
     if (!window.confirm(`ลบแผนงาน "${plan.title}" ใช่หรือไม่?`)) return;
     const { error: e } = await supabase.from("work_plans").delete().eq("id", plan.id);
@@ -302,7 +317,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
         </section>
         <section className="panel today-col todo-col">
           <div className="today-head">
-            <h2>{isAdmin ? "รออนุมัติ" : "สถานะการอนุมัติของฉัน"} {todo.length > 0 && <span className="count-pill">{todo.length}</span>}</h2>
+            <h2>{isAdmin ? "รออนุมัติ / ขอยกเลิก" : "สถานะการอนุมัติของฉัน"} {todo.length > 0 && <span className="count-pill">{todo.length}</span>}</h2>
           </div>
           {todo.length === 0 ? <p className="muted">{isAdmin ? "ไม่มีแผนที่รออนุมัติ" : "ไม่มีรายการค้าง"}</p>
             : todo.slice(0, 6).map(p => <PlanItem key={p.id} plan={p} showWho={isAdmin} onOpen={setSelected} />)}
@@ -341,8 +356,8 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
           {(Object.keys(APPROVALS) as ApprovalStatus[]).map(k => (
             <span key={k}><i style={{ background: APPROVALS[k].solid }} />{APPROVALS[k].label}</span>
           ))}
-          <span><i style={{ background: PAST.bg, boxShadow: "inset 0 0 0 1px #b9b2cc" }} />ผ่านไปแล้ว</span>
-          <span className="muted">· งานที่ยกเลิกจะขีดฆ่า · ไอคอนหน้าชื่อบอกประเภทงาน</span>
+          <span><i style={{ background: PAST.bg, boxShadow: "inset 0 0 0 1px #b9b2cc" }} />ผ่านไปแล้ว / ยกเลิก</span>
+          <span className="muted">· งานที่ยกเลิกจะขีดฆ่า · ⚠ = มีคำขอยกเลิก · ไอคอนหน้าชื่อบอกประเภทงาน</span>
         </div>
       </section>
 
@@ -358,7 +373,12 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
         onCopy={() => copyPlan(selected)} onCopyLink={() => void copyLink(selected)}
         onSubmit={() => void setApproval(selected, "pending")}
         onApprove={() => void setApproval(selected, "approved")}
-        onReturn={note => void setApproval(selected, "returned", note)} />}
+        onReturn={note => void setApproval(selected, "returned", note)}
+        onCancelRequest={reason => void patchPlan(selected, { cancel_requested_at: new Date().toISOString(), cancel_reason: reason }, "ส่งคำขอยกเลิกแล้ว")}
+        onCancelWithdraw={() => void patchPlan(selected, clearRequest, "ถอนคำขอแล้ว")}
+        onCancelApprove={() => void patchPlan(selected, { status: "cancelled" }, "ยกเลิกแผนงานแล้ว")}
+        onCancelReject={() => void patchPlan(selected, clearRequest, "ปฏิเสธคำขอแล้ว")}
+        onCancelNow={reason => void patchPlan(selected, { status: "cancelled", cancel_reason: reason || null }, "ยกเลิกแผนงานแล้ว")} />}
       {toast && <div className="toast" role="status">{toast}</div>}
     </div>
   );
