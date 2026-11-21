@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ROLE_LABELS } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
 
-export function ChangePasswordForm({ profile }: { profile: EmployeeProfile }) {
+export function ChangePasswordForm({ profile, embedded = false, onDone }: { profile: EmployeeProfile; embedded?: boolean; onDone?: () => void }) {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -30,8 +30,24 @@ export function ChangePasswordForm({ profile }: { profile: EmployeeProfile }) {
     const { error: updateError } = await supabase.auth.updateUser({ password: next });
     setSaving(false);
     if (updateError) { setError(updateError.message); return; }
-    setCurrent(""); setNext(""); setConfirm(""); setDone(true);
+    setCurrent(""); setNext(""); setConfirm(""); setDone(true); onDone?.();
   }
+
+  const form = (
+      <form onSubmit={handleSubmit}>
+          <div className="field"><label htmlFor="cp-cur">รหัสผ่านปัจจุบัน</label>
+            <input id="cp-cur" type="password" autoComplete="current-password" required value={current} onChange={e => setCurrent(e.target.value)} /></div>
+          <div className="field"><label htmlFor="cp-new">รหัสผ่านใหม่ (อย่างน้อย 8 ตัว)</label>
+            <input id="cp-new" type="password" autoComplete="new-password" required value={next} onChange={e => setNext(e.target.value)} /></div>
+          <div className="field"><label htmlFor="cp-cf">ยืนยันรหัสผ่านใหม่</label>
+            <input id="cp-cf" type="password" autoComplete="new-password" required value={confirm} onChange={e => setConfirm(e.target.value)} /></div>
+          {error && <p className="error" role="alert">{error}</p>}
+          {done && <p className="ok-box" role="status">เปลี่ยนรหัสผ่านเรียบร้อย ใช้รหัสใหม่ในการเข้าสู่ระบบครั้งถัดไป</p>}
+          <button className="btn" disabled={saving}>{saving ? "กำลังบันทึก..." : "บันทึกรหัสผ่านใหม่"}</button>
+      </form>
+  );
+
+  if (embedded) return form;
 
   return (
     <div>
@@ -43,17 +59,7 @@ export function ChangePasswordForm({ profile }: { profile: EmployeeProfile }) {
       </div>
       <section className="panel" style={{ maxWidth: 520 }}>
         <h2 style={{ marginTop: 0, fontSize: 22 }}>เปลี่ยนรหัสผ่าน</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="field"><label htmlFor="cp-cur">รหัสผ่านปัจจุบัน</label>
-            <input id="cp-cur" type="password" autoComplete="current-password" required value={current} onChange={e => setCurrent(e.target.value)} /></div>
-          <div className="field"><label htmlFor="cp-new">รหัสผ่านใหม่ (อย่างน้อย 8 ตัว)</label>
-            <input id="cp-new" type="password" autoComplete="new-password" required value={next} onChange={e => setNext(e.target.value)} /></div>
-          <div className="field"><label htmlFor="cp-cf">ยืนยันรหัสผ่านใหม่</label>
-            <input id="cp-cf" type="password" autoComplete="new-password" required value={confirm} onChange={e => setConfirm(e.target.value)} /></div>
-          {error && <p className="error" role="alert">{error}</p>}
-          {done && <p className="ok-box" role="status">เปลี่ยนรหัสผ่านเรียบร้อย ใช้รหัสใหม่ในการเข้าสู่ระบบครั้งถัดไป</p>}
-          <button className="btn" disabled={saving}>{saving ? "กำลังบันทึก..." : "บันทึกรหัสผ่านใหม่"}</button>
-        </form>
+        {form}
       </section>
     </div>
   );
