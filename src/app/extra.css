@@ -462,3 +462,24 @@
   .page-head > div:first-child { flex: 1 1 100%; }
   .head-actions { margin-left: auto; }
 }
+
+/* ส่วนหัวกะทัดรัดขึ้น */
+.head-notes { margin: 4px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.55; list-style: disc; }
+.head-notes li::marker { color: var(--brand); }
+@media screen and (min-width: 1101px) {
+  .head-filters select { min-height: 40px; font-size: 14px; padding-top: 0; padding-bottom: 0; }
+  .head-filters .check-inline { font-size: 14px; min-height: 40px; }
+  .head-search { min-height: 40px; width: 250px; padding: 0 12px; }
+  .head-search input { font-size: 14px; }
+  .head-actions .btn { min-height: 40px; padding: 0 18px; font-size: 15px; }
+  .head-actions { gap: 10px; }
+}
+@media screen and (min-width: 1101px) and (max-width: 1699px) {
+  .page-head { flex-wrap: nowrap; }
+  .page-head > div:first-child { flex: 1 1 auto; }
+}
+@media screen and (min-width: 1101px) and (max-width: 1399px) {
+  .page-head { flex-wrap: wrap; }
+  .page-head > div:first-child { flex: 1 1 100%; }
+}
+@media screen and (min-width: 1101px) { .head-search { width: 290px; } }
