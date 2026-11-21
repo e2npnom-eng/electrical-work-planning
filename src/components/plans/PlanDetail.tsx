@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { approvalOf, fmtDateTime, isPastPlan, typeIcon, typeLabel } from "@/lib/plan-meta";
+import { approvalOf, expiryLabel, expiryOf, fmtDateTime, isPastPlan, typeIcon, typeLabel } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
 import type { WorkPlan } from "@/types/plan";
 
@@ -93,6 +93,14 @@ export function PlanDetail({
         </div>
 
         {cancelled && <p className="warn-box"><b>แผนงานนี้ถูกยกเลิกแล้ว</b>{plan.cancel_reason ? ` · เหตุผล: ${plan.cancel_reason}` : ""}</p>}
+        {expiryOf(plan) && (
+          <p className="warn-box expiry-box">
+            <b>{expiryLabel(expiryOf(plan)!)}</b>{" "}
+            {expiryOf(plan) === "over"
+              ? (isAdmin ? "แผนงานนี้ผ่านวันปฏิบัติงานไปแล้วแต่ยังไม่ได้รับอนุมัติ — ให้กด “ยกเลิกแผนงาน” ด้านล่าง" : "แผนงานนี้ผ่านวันปฏิบัติงานไปแล้วแต่ยังไม่ได้รับอนุมัติ — รอผู้ดูแลระบบยกเลิก")
+              : (isAdmin ? "แผนงานนี้ยังไม่ได้รับอนุมัติ ใกล้ถึงวันปฏิบัติงานแล้ว — กดอนุมัติหรือส่งกลับ" : "แผนงานนี้ยังไม่ได้รับอนุมัติ ใกล้ถึงวันปฏิบัติงานแล้ว — โปรดแจ้งผู้ดูแลระบบ")}
+          </p>
+        )}
         {hasRequest && (
           <p className="warn-box">
             <b>มีคำขอยกเลิก</b> โดย {plan.cancel_requester?.full_name ?? "-"}
