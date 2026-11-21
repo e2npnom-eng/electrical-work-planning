@@ -317,9 +317,11 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
       <div className="page-head">
         <div>
           <h1>ปฏิทินแผนงาน</h1>
-          <p className="muted" style={{ margin: 0 }}>
-            เห็นแผนงานของทุกคน · แผนที่ซ้ำสถานที่หรือซ้ำคนจะมีเลขลำดับ #1 (วางก่อน) #2 ... · กดวันที่เพื่อสร้างแผนได้ทันที
-          </p>
+          <ul className="head-notes muted">
+            <li>เห็นแผนงานของทุกคน</li>
+            <li>แผนที่ซ้ำสถานที่หรือซ้ำคนจะมีเลขลำดับ #1 (วางก่อน) #2 ...</li>
+            <li>กดวันที่เพื่อสร้างแผนได้ทันที</li>
+          </ul>
         </div>
         <div className="head-actions">
           <div className="filters head-filters">
