@@ -91,3 +91,14 @@ export function canDeletePlan(profile: EmployeeProfile, plan: WorkPlan) {
 }
 
 export const vehicleLabel = (v: { code: string; plate: string }) => `${v.code} (${v.plate})`;
+
+/** แผนที่ยังไม่อนุมัติ: ใกล้หมดเวลา (วันนี้/พรุ่งนี้) หรือผ่านวันไปแล้ว (แอดมินต้องยกเลิกเอง) */
+export type Expiry = "over" | "today" | "soon";
+export function expiryOf(p: Pick<WorkPlan, "end_at" | "status" | "approval_status">): Expiry | null {
+  if (p.status === "cancelled" || p.approval_status === "approved") return null;
+  const e = new Date(p.end_at);
+  const endDay = new Date(e.getFullYear(), e.getMonth(), e.getDate()).getTime();
+  const days = Math.round((endDay - startOfToday().getTime()) / 86400000);
+  return days < 0 ? "over" : days === 0 ? "today" : days === 1 ? "soon" : null;
+}
+export const expiryLabel = (k: Expiry) => (k === "over" ? "❗ ผ่านวันแล้ว" : k === "today" ? "⏰ หมดเวลาวันนี้" : "⏰ เหลือ 1 วัน");
