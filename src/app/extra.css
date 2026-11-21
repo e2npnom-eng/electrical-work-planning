@@ -441,3 +441,24 @@
 /* กรอบนอกการ์ดสถานะการอนุมัติเป็นสีขาว */
 .stat-approval, .stat-approval.has-todo { background: #fff; border: 1px solid var(--line); }
 .bell .stat-ico { background: #FFE08A !important; }
+
+/* ตัวกรองย้ายไปอยู่ส่วนหัว (ก่อนช่องค้นหา) */
+.head-filters { margin: 0; flex-wrap: nowrap; }
+.head-filters select { min-height: 48px; }
+.head-filters .check-inline { white-space: nowrap; }
+.head-filters .link-btn { white-space: nowrap; }
+@media screen and (min-width: 1101px) { .head-actions { flex-wrap: wrap; justify-content: flex-end; } }
+@media screen and (max-width: 700px) {
+  .head-filters { flex-wrap: wrap; width: 100%; }
+  .head-filters select { flex: 1 1 calc(50% - 4px); }
+}
+/* "ตลอดวัน" ในมุมมองสัปดาห์ให้อยู่บรรทัดเดียว */
+.fc .fc-timegrid-axis-cushion { white-space: nowrap; font-size: 12.5px; padding: 0 6px; }
+.fc .fc-timegrid-axis { min-width: 64px; }
+
+.cal-meta { text-align: right; font-size: 13px; margin: -4px 0 8px; }
+@media screen and (min-width: 1101px) and (max-width: 1699px) {
+  .page-head { flex-wrap: wrap; }
+  .page-head > div:first-child { flex: 1 1 100%; }
+  .head-actions { margin-left: auto; }
+}
