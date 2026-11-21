@@ -15,7 +15,7 @@ import { PlanForm } from "@/components/plans/PlanForm";
 import type { Prefill } from "@/components/plans/PlanForm";
 import { PlanDetail } from "@/components/plans/PlanDetail";
 import {
-  APPROVALS, PLAN_SELECT, WORK_TYPES, approvalOf, canDeletePlan, canEditPlan,
+  APPROVALS, PLAN_SELECT, WORK_TYPES, approvalOf, byEmployeeCode, canDeletePlan, canEditPlan,
   canViewAll, expiryLabel, expiryOf, fmtDate, fmtTime, isMine, typeIcon
 } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
@@ -133,7 +133,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
       .then(({ data }) => { if (data) setVehicles(data as Vehicle[]); });
     void supabase.from("employees").select("id, employee_code, full_name, role, active")
       .eq("active", true).order("full_name")
-      .then(({ data }) => { if (data) setEmployees(data as EmployeeProfile[]); });
+      .then(({ data }) => { if (data) setEmployees(byEmployeeCode(data as EmployeeProfile[])); });
   }, [supabase, loadSide]);
 
   useEffect(() => {
