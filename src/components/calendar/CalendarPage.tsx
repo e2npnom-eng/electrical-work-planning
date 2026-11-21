@@ -299,7 +299,17 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   const inSpan = span
     ? plans.filter(p => p.status !== "cancelled" && p.start_at >= span.start && p.start_at < span.end)
     : [];
-  const finishedCount = inSpan.filter(p => new Date(p.end_at).getTime() < nowMs).length;
+  // สรุปสถานะงานของฉัน (ช่วงที่แสดง)
+  const mineSpan = span
+    ? plans.filter(p => isMine(p, profile.id) && p.start_at >= span.start && p.start_at < span.end)
+    : [];
+  const myDone = mineSpan.filter(p => p.status !== "cancelled" && p.approval_status === "approved" && new Date(p.end_at).getTime() < nowMs).length;
+  const myCancelled = mineSpan.filter(p => p.status === "cancelled").length;
+  const myEdit = mineSpan.filter(p => p.status !== "cancelled" && p.approval_status === "returned").length;
+  // การ์ดสถานะการอนุมัติ (ด้านบน)
+  const cntCancelReq = todo.filter(p => p.cancel_requested_at).length;
+  const cntPending = todo.filter(p => p.approval_status === "pending" && !p.cancel_requested_at).length;
+  const cntReturned = todo.filter(p => p.approval_status === "returned" && !p.cancel_requested_at).length;
   const ongoingCount = window2.filter(p => p.status !== "cancelled"
     && new Date(p.start_at).getTime() <= nowMs && new Date(p.end_at).getTime() >= nowMs).length;
   const freeVehicles = vehicleToday.filter(x => x.uses.length === 0).length;
@@ -330,7 +340,25 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
       <div className="grid-cards">
         <div className="stat"><div><span className="muted">แผนงานในช่วงที่แสดง</span><strong>{inSpan.length} <small className="muted">แผนงาน</small></strong></div><i className="stat-ico" style={{ background: "#EDE6FA" }} aria-hidden="true">📅</i></div>
         <div className="stat"><div><span className="muted">กำลังดำเนินการ</span><strong>{ongoingCount} <small className="muted">แผนงาน</small></strong></div><i className="stat-ico" style={{ background: "#FFF0D6" }} aria-hidden="true">⚡</i></div>
-        <div className="stat"><div><span className="muted">เสร็จสิ้นแล้ว</span><strong>{finishedCount} <small className="muted">แผนงาน</small></strong></div><i className="stat-ico" style={{ background: "#DFF3EA" }} aria-hidden="true">✅</i></div>
+        <div className={`stat stat-approval${todo.length ? " has-todo" : ""}`}>
+          <div className="stat-body">
+            <span className="muted">{isAdmin ? "รออนุมัติ / ขอยกเลิก" : "สถานะการอนุมัติของฉัน"}</span>
+            <strong>{todo.length} <small className="muted">รายการ</small></strong>
+            <div className="ap-chips">
+              <span className="ap-chip ap-pending">รออนุมัติ {cntPending}</span>
+              {!isAdmin && <span className="ap-chip ap-returned">ส่งกลับแก้ไข {cntReturned}</span>}
+              <span className="ap-chip ap-cancel">ขอยกเลิก {cntCancelReq}</span>
+            </div>
+            {todo.slice(0, 3).map(p => (
+              <button key={p.id} className="ap-item" onClick={() => setSelected(p)}>
+                <span>{fmtTime(p.start_at)}</span> {p.title}
+              </button>
+            ))}
+            {todo.length > 3 && <small className="muted">และอีก {todo.length - 3} รายการ</small>}
+            {todo.length === 0 && <small className="muted">{isAdmin ? "ไม่มีแผนที่รออนุมัติ" : "ไม่มีรายการค้าง"}</small>}
+          </div>
+          <i className="stat-ico" style={{ background: "#FDE8E2" }} aria-hidden="true">🔔</i>
+        </div>
       </div>
 
       {error && <p className="error" role="alert">{error}</p>}
@@ -414,13 +442,13 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
           {tomorrowList.length === 0 ? <p className="muted">ไม่มีงานพรุ่งนี้</p>
             : tomorrowList.map(p => <PlanItem key={p.id} plan={p} showWho={scope === "all"} onOpen={setSelected} />)}
         </section>
-        <section className="panel side-panel bottom-panel todo-col">
-          <div className="today-head">
-            <h2>{isAdmin ? "รออนุมัติ / ขอยกเลิก" : "สถานะการอนุมัติของฉัน"} {todo.length > 0 && <span className="count-pill">{todo.length}</span>}</h2>
+        <section className="panel side-panel bottom-panel sum-panel">
+          <div className="today-head"><h2>สรุปสถานะงานของฉัน</h2><span className="muted" style={{ fontSize: 13 }}>ในช่วงที่แสดงในปฏิทิน</span></div>
+          <div className="sum-grid">
+            <div className="sum-box sum-done"><strong>{myDone}</strong><span>เสร็จสิ้น</span></div>
+            <div className="sum-box sum-cancel"><strong>{myCancelled}</strong><span>ยกเลิก</span></div>
+            <div className="sum-box sum-edit"><strong>{myEdit}</strong><span>แก้ไข (ส่งกลับ)</span></div>
           </div>
-          {todo.length === 0 ? <p className="muted">{isAdmin ? "ไม่มีแผนที่รออนุมัติ" : "ไม่มีรายการค้าง"}</p>
-            : todo.slice(0, 6).map(p => <PlanItem key={p.id} plan={p} showWho={isAdmin} onOpen={setSelected} />)}
-          {todo.length > 6 && <p className="muted">และอีก {todo.length - 6} รายการ (กรองสถานะ “รออนุมัติ” ในปฏิทินเพื่อดูทั้งหมด)</p>}
         </section>
       </div>
 
