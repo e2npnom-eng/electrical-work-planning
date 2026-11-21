@@ -369,3 +369,11 @@
 @media screen and (min-width: 901px) {
   .app-shell:has(> .sidebar) { background: linear-gradient(to right, var(--deep) var(--sb-w), transparent var(--sb-w)); }
 }
+
+/* หน้าแรกใช้ความกว้างเต็มจอ (ไม่เหลือช่องว่างสองข้าง) */
+@media screen and (min-width: 901px) {
+  .page:has(> .home-wide) { max-width: none; padding-left: 28px; padding-right: 28px; }
+}
+@media screen and (min-width: 1101px) {
+  .home-grid { grid-template-columns: minmax(0, 1fr) clamp(360px, 26vw, 460px); }
+}
