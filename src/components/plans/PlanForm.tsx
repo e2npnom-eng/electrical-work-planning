@@ -354,7 +354,7 @@ export function PlanForm({ profile, employees, vehicles, plan, prefill, onClose,
                     <label key={v.id} className={`member-item${used && !checked ? " is-busy" : ""}`}>
                       <input type="checkbox" checked={checked} onChange={() => toggleVehicle(v.id)} />
                       <span>🚗 {v.code}</span>
-                      <small>{v.plate}</small>
+                      {v.plate && <small>{v.plate}</small>}
                       {used && <em className="veh-used">ถูกใช้แล้ว: {used}</em>}
                     </label>
                   );

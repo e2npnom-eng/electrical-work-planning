@@ -124,7 +124,7 @@ export function PlanDetail({
         <div style={{ marginBottom: 24 }}>
           <div className="muted" style={{ marginBottom: 10 }}>รถที่ใช้งาน</div>
           {vehicles.length ? <div className="chips">
-            {vehicles.map((v, i) => <span className="person" key={i}>🚗 {v.code} · {v.plate}</span>)}
+            {vehicles.map((v, i) => <span className="person" key={i}>🚗 {v.code}{v.plate ? ` · ${v.plate}` : ""}</span>)}
           </div> : <span>-</span>}
         </div>
         <div>
