@@ -102,3 +102,7 @@ export function expiryOf(p: Pick<WorkPlan, "end_at" | "status" | "approval_statu
   return days < 0 ? "over" : days === 0 ? "today" : days === 1 ? "soon" : null;
 }
 export const expiryLabel = (k: Expiry) => (k === "over" ? "❗ ผ่านวันแล้ว" : k === "today" ? "⏰ หมดเวลาวันนี้" : "⏰ เหลือ 1 วัน");
+
+export function byEmployeeCode<T extends { employee_code: string }>(list: T[]): T[] {
+  return [...list].sort((a, b) => a.employee_code.length - b.employee_code.length || a.employee_code.localeCompare(b.employee_code));
+}
