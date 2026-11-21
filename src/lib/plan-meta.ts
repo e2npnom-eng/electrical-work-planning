@@ -6,7 +6,8 @@ export const PLAN_SELECT =
   "creator:employees!work_plans_created_by_fkey(id, full_name, employee_code), " +
   "approver:employees!work_plans_approved_by_fkey(id, full_name, employee_code), " +
   "cancel_requester:employees!work_plans_cancel_requested_by_fkey(id, full_name, employee_code), " +
-  "work_plan_members(employee_id, employee:employees(id, full_name, employee_code))";
+  "work_plan_members(employee_id, employee:employees(id, full_name, employee_code)), " +
+  "work_plan_vehicles(vehicle_id, vehicle:vehicles(id, code, plate))";
 
 export const WORK_TYPES: { value: string; label: string; icon: string }[] = [
   { value: "maintenance", label: "บำรุงรักษา", icon: "🔧" },
@@ -88,3 +89,5 @@ export function canDeletePlan(profile: EmployeeProfile, plan: WorkPlan) {
   return profile.role === "admin" ||
     (plan.created_by === profile.id && (plan.approval_status === "draft" || plan.approval_status === "returned"));
 }
+
+export const vehicleLabel = (v: { code: string; plate: string }) => `${v.code} (${v.plate})`;
