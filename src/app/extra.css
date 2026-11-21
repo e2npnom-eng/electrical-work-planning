@@ -508,3 +508,13 @@
 .ap-over { background: #7A1D12; }
 .ap-over, .ap-over span { color: #fff; }
 .ap-over:hover { background: #8F2A1D; }
+
+/* รายการรถในฟอร์ม: ชื่อ + ทะเบียนบรรทัดแรก, ข้อความ "ถูกใช้แล้ว" ลงบรรทัดที่สอง (ไม่ทับกัน) */
+.vehicle-list .member-item {
+  display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center;
+  column-gap: 12px; row-gap: 2px; min-height: 46px; height: auto; padding: 8px 14px;
+}
+.vehicle-list .member-item input { grid-column: 1; grid-row: 1; }
+.vehicle-list .member-item > span { grid-column: 2; grid-row: 1; white-space: nowrap; flex: none; }
+.vehicle-list .member-item > small { grid-column: 3; grid-row: 1; white-space: nowrap; text-align: right; }
+.vehicle-list .member-item > .veh-used { grid-column: 2 / -1; grid-row: 2; margin: 0; white-space: normal; line-height: 1.35; overflow-wrap: anywhere; }
