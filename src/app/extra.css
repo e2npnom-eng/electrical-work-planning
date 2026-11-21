@@ -579,3 +579,56 @@
 .veh-row[role="button"] { cursor: pointer; transition: transform .12s, box-shadow .12s; }
 .veh-row[role="button"]:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(42, 20, 80, .14); }
 .veh-row[role="button"]:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+
+/* ---------- หน้าจัดการระบบ: แยกคอลัมน์ตามบทบาท ---------- */
+@media screen and (min-width: 901px) { .page:has(> .admin-wide) { max-width: none; padding-left: 28px; padding-right: 28px; } }
+.role-search { align-items: center; gap: 14px; margin-bottom: 16px; }
+.role-search input[type="search"] { flex: 0 1 360px; }
+.role-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.role-col { background: #fff; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: 0 1px 2px rgba(42,20,80,.04), 0 6px 18px rgba(42,20,80,.04); }
+.role-col-head { display: flex; gap: 12px; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.role-col-head h2 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+.role-col-head p { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); }
+.role-col-ico { width: 44px; height: 44px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; flex: none; }
+.role-count { font-size: 14px; font-weight: 700; padding: 1px 10px; border-radius: 999px; }
+.role-col-admin .role-col-head { background: #F3EEFC; } .role-col-admin .role-col-ico, .role-col-admin .role-count { background: #E0D4F7; color: #4A2A8A; }
+.role-col-executive .role-col-head { background: #E8F6F2; } .role-col-executive .role-col-ico, .role-col-executive .role-count { background: #CBEBE3; color: #0F6B5B; }
+.role-col-employee .role-col-head { background: #F4F3F7; } .role-col-employee .role-col-ico, .role-col-employee .role-count { background: #E3E0EA; color: #4A4560; }
+.role-list { display: flex; flex-direction: column; gap: 10px; padding: 12px; max-height: calc(100vh - 290px); min-height: 120px; overflow-y: auto; }
+.role-empty { text-align: center; padding: 24px 8px; margin: 0; }
+.role-card { border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; background: #fff; display: flex; flex-direction: column; gap: 8px; transition: background .4s, box-shadow .4s; }
+.role-card.is-off { background: #F6F5F9; opacity: .75; }
+.role-card.just-moved { background: #FFF6D6; box-shadow: 0 0 0 2px #F6A623; }
+.role-card-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.role-avatar { width: 36px; height: 36px; border-radius: 50%; background: #EDE6FA; color: var(--brand); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.role-who { display: flex; flex-direction: column; min-width: 0; }
+.role-who b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.role-who small { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.role-card-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.role-move { display: flex; gap: 6px; flex-wrap: wrap; }
+.move-btn { min-height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid #cfc7dd; background: #fff; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.move-admin { color: #4A2A8A; border-color: #CDBCF0; } .move-admin:hover:not(:disabled) { background: #F3EEFC; }
+.move-executive { color: #0F6B5B; border-color: #A9DDD1; } .move-executive:hover:not(:disabled) { background: #E8F6F2; }
+.move-employee { color: #4A4560; } .move-employee:hover:not(:disabled) { background: #F4F3F7; }
+.move-btn:disabled, .active-switch:disabled { opacity: .45; cursor: not-allowed; }
+.active-switch { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px 0 4px; border-radius: 999px; border: 1px solid #cfc7dd; background: #fff; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: pointer; }
+.active-switch i { width: 22px; height: 22px; border-radius: 50%; background: #B8B2C6; display: inline-block; }
+.active-switch.on { color: #0F766E; border-color: #A9DDD1; }
+.active-switch.on i { background: #0F766E; }
+@media screen and (max-width: 1100px) { .role-board { grid-template-columns: 1fr; } .role-list { max-height: none; } }
+@media screen and (max-width: 700px) { .role-search { flex-direction: column; align-items: stretch; } .role-search input[type="search"] { flex: 1 1 auto; } }
+
+/* กำหนดบทบาทด้วยตัวเลือกเดียว (แทนปุ่มย้ายไป) */
+.role-assign { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.role-assign select { min-height: 32px; padding: 0 28px 0 10px; border: 1px solid #cfc7dd; border-radius: 10px; background: #fff; font: inherit; font-size: 13px; font-weight: 600; color: var(--deep); }
+.role-assign select:disabled { opacity: .5; cursor: not-allowed; }
+
+/* เพิ่ม/ลบรายชื่อ */
+.role-search .btn { white-space: nowrap; }
+.del-btn { min-height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid #F0C4C4; background: #fff; color: #B42318; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.del-btn:hover:not(:disabled) { background: #FDECEC; }
+.del-btn:disabled { opacity: .45; cursor: not-allowed; }
+.del-confirm { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; font-weight: 600; color: #B42318; }
+.del-yes, .del-no { min-height: 30px; padding: 0 10px; border-radius: 999px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.del-yes { background: #B42318; color: #fff; border: 1px solid #B42318; }
+.del-no { background: #fff; color: var(--deep); border: 1px solid #cfc7dd; }
