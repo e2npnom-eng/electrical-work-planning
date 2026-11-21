@@ -483,3 +483,28 @@
   .page-head > div:first-child { flex: 1 1 100%; }
 }
 @media screen and (min-width: 1101px) { .head-search { width: 290px; } }
+
+/* ข้อความอธิบายใต้ชื่อหน้า: บรรทัดเดียว ตัวเล็ก */
+.head-notes { margin: 2px 0 0; padding: 0; list-style: none; font-size: 12px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media screen and (max-width: 900px) { .head-notes { white-space: normal; } }
+
+/* ใกล้หมดเวลา (ยังไม่อนุมัติ ระบบจะยกเลิกอัตโนมัติ) */
+.expiry-badge { font-weight: 700; white-space: nowrap; }
+.expiry-today { background: #D64A2B; color: #fff; }
+.expiry-soon { background: #FFE0A3; color: #7A4B00; }
+.expiry-box { background: #FFF1E8; border-color: #F2B48F; }
+.fc .fc-event.ev-expiring-today { outline: 2.5px dashed #D64A2B; outline-offset: 1px; }
+.fc .fc-event.ev-expiring-soon { outline: 2.5px dashed #E8A23C; outline-offset: 1px; }
+.fc .fc-list-event.ev-expiring-today td:first-child, .fc .fc-list-event.ev-expiring-soon td:first-child { box-shadow: inset 4px 0 0 #D64A2B; }
+.today-item { flex-wrap: wrap; }
+.today-item .badges { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none; }
+.side-panel .today-item .badges { grid-column: 3; grid-row: 1 / span 2; }
+.side-panel .today-item:not(:has(.today-no)) .badges { grid-column: 2; grid-row: 1 / span 2; }
+
+/* ผ่านวันแล้วแต่ยังไม่อนุมัติ (แอดมินต้องยกเลิก) */
+.expiry-over { background: #7A1D12; color: #fff; }
+.fc .fc-event.ev-expiring-over { outline: 2.5px solid #7A1D12; outline-offset: 1px; }
+.fc .fc-list-event.ev-expiring-over td:first-child { box-shadow: inset 4px 0 0 #7A1D12; }
+.ap-over { background: #7A1D12; }
+.ap-over, .ap-over span { color: #fff; }
+.ap-over:hover { background: #8F2A1D; }
