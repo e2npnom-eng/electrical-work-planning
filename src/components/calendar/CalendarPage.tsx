@@ -19,7 +19,7 @@ import {
   canViewAll, fmtTime, isMine, typeIcon
 } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
-import type { ApprovalStatus, WorkPlan } from "@/types/plan";
+import type { ApprovalStatus, Vehicle, WorkPlan } from "@/types/plan";
 
 type Range = { start: string; end: string };
 type Props = { profile: EmployeeProfile; initialPlanId?: string };
@@ -31,16 +31,19 @@ const dayStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate(
 const overlaps = (p: WorkPlan, from: Date, to: Date) =>
   new Date(p.start_at).getTime() < to.getTime() && new Date(p.end_at).getTime() > from.getTime();
 
-function PlanItem({ plan, showWho, onOpen }: { plan: WorkPlan; showWho: boolean; onOpen: (p: WorkPlan) => void }) {
+function PlanItem({ plan, showWho, onOpen, no }: { plan: WorkPlan; showWho: boolean; onOpen: (p: WorkPlan) => void; no?: number }) {
   const ap = approvalOf(plan);
   const asking = Boolean(plan.cancel_requested_at) && plan.status !== "cancelled";
   const sameDay = dayStart(new Date(plan.start_at)).getTime() === dayStart(new Date(plan.end_at)).getTime();
   return (
     <button className="today-item" onClick={() => onOpen(plan)}>
+      {no !== undefined && <span className="today-no" aria-label={`ลำดับที่ ${no}`}>{no}</span>}
       <span className="today-time">{sameDay ? `${fmtTime(plan.start_at)}–${fmtTime(plan.end_at)}` : "ต่อเนื่อง"}</span>
       <span className="today-main">
         <b className={plan.status === "cancelled" ? "ev-cancelled" : undefined}>{typeIcon(plan.work_type)} {plan.title}</b>
-        <small>{plan.location}{showWho && plan.controller ? ` · ${plan.controller.full_name}` : ""}</small>
+        <small>📍 {plan.location}</small>
+        {(showWho || no !== undefined) && plan.controller && <small>👤 {plan.controller.full_name}{(plan.work_plan_members?.length ?? 0) > 0 ? ` + ทีมงาน ${plan.work_plan_members!.length} คน` : ""}</small>}
+        {(plan.work_plan_vehicles?.length ?? 0) > 0 && <small>🚗 {plan.work_plan_vehicles!.map(v => v.vehicle?.code).filter(Boolean).join(", ")}</small>}
       </span>
       <span className="mini-badge" style={asking ? { background: "#F8D7D2", color: "#7A1D12" } : { background: ap.bg, color: ap.fg }}>{asking ? "ขอยกเลิก" : ap.label}</span>
     </button>
@@ -59,6 +62,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   const isAdmin = profile.role === "admin";
 
   const [plans, setPlans] = useState<WorkPlan[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [window2, setWindow2] = useState<WorkPlan[]>([]);
   const [attention, setAttention] = useState<WorkPlan[]>([]);
   const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
@@ -121,6 +125,8 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
 
   useEffect(() => {
     void loadSide();
+    void supabase.from("vehicles").select("id, code, plate, sort_order, active").eq("active", true).order("sort_order")
+      .then(({ data }) => { if (data) setVehicles(data as Vehicle[]); });
     void supabase.from("employees").select("id, employee_code, full_name, role, active")
       .eq("active", true).order("full_name")
       .then(({ data }) => { if (data) setEmployees(data as EmployeeProfile[]); });
@@ -209,7 +215,14 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   const tomorrow = new Date(today.getTime() + DAY);
   const dayAfter = new Date(today.getTime() + 2 * DAY);
   const scoped = (list: WorkPlan[]) => scope === "mine" ? list.filter(p => isMine(p, profile.id)) : list;
-  const todayList = scoped(window2).filter(p => overlaps(p, today, tomorrow));
+  const todayList = scoped(window2).filter(p => overlaps(p, today, tomorrow))
+    .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
+  // สถานะรถวันนี้ (ทุกคนเห็นรถทุกคัน ไม่ขึ้นกับตัวกรอง)
+  const todayAll = window2.filter(p => p.status !== "cancelled" && overlaps(p, today, tomorrow))
+    .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
+  const vehicleToday = vehicles.map(v => ({
+    v, uses: todayAll.filter(p => (p.work_plan_vehicles ?? []).some(x => x.vehicle_id === v.id))
+  }));
   const tomorrowList = scoped(window2).filter(p => overlaps(p, tomorrow, dayAfter));
   const todo = isAdmin
     ? attention.filter(p => p.approval_status === "pending" || p.cancel_requested_at)
@@ -241,7 +254,8 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
     openNew({
       title: plan.title, controller_id: plan.controller_id, location: plan.location,
       start_at: shift(plan.start_at), end_at: shift(plan.end_at), work_type: plan.work_type ?? undefined,
-      description: plan.description ?? "", memberIds: (plan.work_plan_members ?? []).map(m => m.employee_id), copied: true
+      description: plan.description ?? "", memberIds: (plan.work_plan_members ?? []).map(m => m.employee_id),
+      vehicleIds: (plan.work_plan_vehicles ?? []).map(v => v.vehicle_id), copied: true
     });
   }
 
@@ -296,6 +310,28 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
         </button>
       </div>
 
+      {vehicles.length > 0 && (
+        <section className="panel vehicle-panel" aria-label="สถานะรถวันนี้">
+          <div className="today-head"><h2>รถวันนี้ <small>{dateLabel}</small></h2></div>
+          <div className="veh-grid">
+            {vehicleToday.map(({ v, uses }) => (
+              <div key={v.id} className={`veh-card ${uses.length ? "veh-busy" : "veh-free"}`}>
+                <div className="veh-top">
+                  <b>🚗 {v.code}</b>
+                  <span className="veh-state">{uses.length ? "ใช้งาน" : "ว่าง"}</span>
+                </div>
+                <small className="muted">{v.plate}</small>
+                {uses.map(p => (
+                  <button key={p.id} className="veh-use" onClick={() => setSelected(p)}>
+                    <span>{fmtTime(p.start_at)}–{fmtTime(p.end_at)}</span> {p.title}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <div className="today-grid">
         <section className="panel today-col">
           <div className="today-head">
@@ -308,7 +344,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
             )}
           </div>
           {todayList.length === 0 ? <p className="muted">ไม่มีงานวันนี้</p>
-            : todayList.map(p => <PlanItem key={p.id} plan={p} showWho={scope === "all"} onOpen={setSelected} />)}
+            : todayList.map((p, i) => <PlanItem key={p.id} plan={p} no={i + 1} showWho={scope === "all"} onOpen={setSelected} />)}
         </section>
         <section className="panel today-col">
           <div className="today-head"><h2>พรุ่งนี้</h2></div>
@@ -361,7 +397,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
         </div>
       </section>
 
-      {form && <PlanForm profile={profile} employees={employees} plan={form.plan} prefill={form.prefill}
+      {form && <PlanForm profile={profile} employees={employees} vehicles={vehicles} plan={form.plan} prefill={form.prefill}
         onClose={() => setForm(null)}
         onSaved={async () => { setForm(null); setSelected(null); await reloadAll(); showToast("บันทึกแล้ว"); }} />}
       {selected && <PlanDetail plan={selected} profile={profile}
