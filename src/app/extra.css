@@ -261,11 +261,6 @@
 .fc .fc-list-event.ev-past td { color: #8b849c; }
 
 /* ---------- รถ + ลำดับงานวันนี้ ---------- */
-.vehicle-panel { padding: 18px; margin-bottom: 16px; }
-.veh-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
-.veh-card { border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; border: 1px solid transparent; }
-.veh-free { background: #E3F4EA; border-color: #BFE3CD; }
-.veh-busy { background: #FFF1DC; border-color: #F2D3A0; }
 .veh-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .veh-state { font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
 .veh-free .veh-state { background: #1F8A4C; color: #fff; }
@@ -277,3 +272,100 @@
 .veh-used { font-style: normal; font-size: 12px; color: #C2570C; margin-left: auto; }
 .member-item.is-busy { background: #FFF6E8; }
 @media print { .vehicle-panel { display: none !important; } }
+
+/* ---------- โครงหน้าแรกใหม่ ---------- */
+.head-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.head-search { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px; width: 300px; max-width: 100%;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--muted); }
+.head-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 15px; color: inherit; }
+.head-search:focus-within { border-color: var(--brand); }
+.stat strong small { font-size: 14px; font-weight: 500; }
+.home-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
+.home-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.side-panel { padding: 18px; }
+.veh-count { white-space: nowrap; }
+.veh-list { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; }
+.veh-row { border-radius: 12px; padding: 9px 12px; display: flex; flex-direction: column; gap: 4px; border: 1px solid transparent; }
+.veh-free { background: #E3F4EA; border-color: #BFE3CD; }
+.veh-busy { background: #FFF1DC; border-color: #F2D3A0; }
+.veh-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.veh-top small { font-size: 13px; }
+.veh-state { flex: none; font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+.veh-free .veh-state { background: #1F8A4C; color: #fff; }
+.veh-busy .veh-state { background: #C2570C; color: #fff; }
+@media (max-width: 1100px) {
+  .home-grid { grid-template-columns: 1fr; }
+  .home-side { order: -1; }
+}
+@media print { .grid-cards, .home-side, .head-actions { display: none !important; } }
+@media screen and (max-width: 700px) {
+  .head-actions { width: 100%; }
+  .head-search { width: 100%; }
+  .grid-cards { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .stat { padding: 10px 12px; }
+  .stat .muted { font-size: 12px; }
+  .stat strong { font-size: 24px; }
+  .stat strong small { display: none; }
+  .stat-bar { width: 6px; height: 30px; }
+  .veh-list { max-height: 260px; }
+}
+
+/* รายการงานในคอลัมน์ขวา: เวลาอยู่บรรทัดบน ชื่อ/รายละเอียดเต็มความกว้าง */
+.side-panel .today-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 10px; row-gap: 2px; align-items: start; }
+.side-panel .today-item .today-no { grid-column: 1; grid-row: 1 / span 2; }
+.side-panel .today-item .today-time { grid-column: 2; grid-row: 1; width: auto; }
+.side-panel .today-item .today-main { grid-column: 2; grid-row: 2; }
+.side-panel .today-item .mini-badge { grid-column: 3; grid-row: 1; }
+.side-panel .today-item:not(:has(.today-no)) { grid-template-columns: minmax(0, 1fr) auto; }
+.side-panel .today-item:not(:has(.today-no)) .today-time, .side-panel .today-item:not(:has(.today-no)) .today-main { grid-column: 1; }
+.side-panel .today-main b { white-space: normal; }
+
+/* ---------- ปรับความสมดุลหน้าแรก (desktop) ---------- */
+@media screen and (min-width: 1101px) {
+  .page-head { align-items: center; margin-bottom: 20px; }
+  .head-actions { margin-left: auto; }
+  .grid-cards { gap: 16px; margin-bottom: 20px; }
+  .stat { padding: 14px 20px; }
+  .stat strong { font-size: 30px; }
+  .stat .muted { margin-bottom: 2px; }
+  .stat-ico { width: 48px; height: 48px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; font-style: normal; flex: none; }
+  .home-grid { grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; }
+  .cal-panel { padding: 20px 22px; }
+  .cal-panel .fc .fc-daygrid-day-frame { min-height: 118px; }
+  .home-side { gap: 16px; }
+  .side-panel { padding: 16px; }
+  .veh-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: none; overflow: visible; }
+  .veh-row { padding: 8px 10px; gap: 3px; }
+  .veh-top { align-items: flex-start; flex-wrap: wrap; row-gap: 2px; }
+  .veh-top > span:first-child { display: flex; flex-direction: column; min-width: 0; }
+  .veh-top small { font-size: 12px; margin: 0; }
+  .veh-state { font-size: 11px; padding: 1px 8px; }
+  .veh-use { font-size: 12px; padding: 4px 6px; white-space: normal; }
+  .veh-use span { display: block; }
+}
+.stat-ico { font-style: normal; }
+.panel { box-shadow: 0 1px 2px rgba(42, 20, 80, 0.04), 0 6px 18px rgba(42, 20, 80, 0.04); }
+
+.home-bottom { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 20px; }
+.home-bottom .side-panel { padding: 18px; }
+@media screen and (min-width: 1101px) {
+  .home-grid { grid-template-columns: minmax(0, 1fr) 360px; align-items: stretch; }
+  .cal-panel { display: flex; flex-direction: column; }
+  .cal-panel .fc-wrap { flex: 1; }
+  .cal-panel .legend { margin-top: auto; padding-top: 14px; }
+  .cal-panel .fc .fc-daygrid-day-frame { min-height: 108px; }
+}
+@media (max-width: 1100px) { .home-bottom { margin-top: 14px; } }
+@media print { .home-bottom { display: none !important; } }
+@media screen and (min-width: 1101px) {
+  .page-head { flex-wrap: nowrap; }
+  .page-head > div:first-child { flex: 1 1 auto; min-width: 0; }
+  .head-actions { flex: none; flex-wrap: nowrap; }
+  .veh-top > span:first-child { flex: 1 1 0; }
+  .veh-state { margin-left: auto; }
+}
+
+/* แถบเมนูสีม่วงเต็มความสูงทั้งหน้า (รวมตอนจับภาพ/พิมพ์เต็มหน้า) */
+@media screen and (min-width: 901px) {
+  .app-shell:has(> .sidebar) { background: linear-gradient(to right, var(--deep) var(--sb-w), transparent var(--sb-w)); }
+}
