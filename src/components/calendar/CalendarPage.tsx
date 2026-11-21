@@ -322,6 +322,20 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
           </p>
         </div>
         <div className="head-actions">
+          <div className="filters head-filters">
+            <select aria-label="ประเภทงาน" value={fType} onChange={e => setFType(e.target.value)}>
+              <option value="">ทุกประเภทงาน</option>
+              {WORK_TYPES.map(t => <option key={t.value} value={t.value}>{t.icon} {t.label}</option>)}
+            </select>
+            <select aria-label="สถานะอนุมัติ" value={fApproval} onChange={e => setFApproval(e.target.value)}>
+              <option value="">ทุกสถานะอนุมัติ</option>
+              {(Object.keys(APPROVALS) as ApprovalStatus[]).map(k => <option key={k} value={k}>{APPROVALS[k].label}</option>)}
+            </select>
+            {(
+              <label className="check-inline"><input type="checkbox" checked={onlyMine} onChange={e => setOnlyMine(e.target.checked)} />เฉพาะงานของฉัน</label>
+            )}
+            {hasFilter && <button className="link-btn" onClick={() => { setQ(""); setFType(""); setFApproval(""); setOnlyMine(false); }}>ล้างตัวกรอง</button>}
+          </div>
           <label className="head-search">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
             <input type="search" placeholder="ค้นหาแผนงาน / สถานที่ / ชื่อคน" aria-label="ค้นหา" value={q} onChange={e => setQ(e.target.value)} />
@@ -361,21 +375,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
 
       <div className="home-grid">
       <section className="panel cal-panel">
-        <div className="filters">
-          <select aria-label="ประเภทงาน" value={fType} onChange={e => setFType(e.target.value)}>
-            <option value="">ทุกประเภทงาน</option>
-            {WORK_TYPES.map(t => <option key={t.value} value={t.value}>{t.icon} {t.label}</option>)}
-          </select>
-          <select aria-label="สถานะอนุมัติ" value={fApproval} onChange={e => setFApproval(e.target.value)}>
-            <option value="">ทุกสถานะอนุมัติ</option>
-            {(Object.keys(APPROVALS) as ApprovalStatus[]).map(k => <option key={k} value={k}>{APPROVALS[k].label}</option>)}
-          </select>
-          {(
-            <label className="check-inline"><input type="checkbox" checked={onlyMine} onChange={e => setOnlyMine(e.target.checked)} />เฉพาะงานของฉัน</label>
-          )}
-          {hasFilter && <button className="link-btn" onClick={() => { setQ(""); setFType(""); setFApproval(""); setOnlyMine(false); }}>ล้างตัวกรอง</button>}
-          <span className="muted filter-count">{loading ? "กำลังโหลด..." : `${filtered.length} รายการในช่วงที่แสดง`}</span>
-        </div>
+        <div className="muted cal-meta">{loading ? "กำลังโหลด..." : `${filtered.length} รายการในช่วงที่แสดง`}</div>
         <div className="fc-wrap">
           <FullCalendar ref={calRef} plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
             initialView={isMobile ? "listMonth" : "dayGridMonth"}
