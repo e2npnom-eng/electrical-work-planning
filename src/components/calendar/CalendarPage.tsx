@@ -307,7 +307,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   const hasFilter = Boolean(q || fType || fApproval || onlyMine);
 
   return (
-    <div>
+    <div className="home-wide">
       <div className="page-head">
         <div>
           <h1>ปฏิทินแผนงาน</h1>
@@ -369,6 +369,19 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
         </div>
       </section>
       <aside className="home-side">
+        <section className="panel side-panel">
+          <div className="today-head">
+            <h2>วันนี้</h2>
+            {(
+              <div className="seg" role="group" aria-label="ขอบเขต">
+                <button aria-pressed={scope === "mine"} onClick={() => setScope("mine")}>ของฉัน</button>
+                <button aria-pressed={scope === "all"} onClick={() => setScope("all")}>ทุกคน</button>
+              </div>
+            )}
+          </div>
+          {todayList.length === 0 ? <p className="muted">ไม่มีงานวันนี้</p>
+            : todayList.map((p, i) => <PlanItem key={p.id} plan={p} no={i + 1} showWho={scope === "all"} onOpen={setSelected} />)}
+        </section>
         {vehicles.length > 0 && (
           <section className="panel side-panel vehicle-panel" aria-label="สถานะรถวันนี้">
             <div className="today-head">
@@ -392,19 +405,6 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
             </div>
           </section>
         )}
-        <section className="panel side-panel">
-          <div className="today-head">
-            <h2>วันนี้</h2>
-            {(
-              <div className="seg" role="group" aria-label="ขอบเขต">
-                <button aria-pressed={scope === "mine"} onClick={() => setScope("mine")}>ของฉัน</button>
-                <button aria-pressed={scope === "all"} onClick={() => setScope("all")}>ทุกคน</button>
-              </div>
-            )}
-          </div>
-          {todayList.length === 0 ? <p className="muted">ไม่มีงานวันนี้</p>
-            : todayList.map((p, i) => <PlanItem key={p.id} plan={p} no={i + 1} showWho={scope === "all"} onOpen={setSelected} />)}
-        </section>
       </aside>
       </div>
 
