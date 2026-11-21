@@ -47,6 +47,7 @@ export function PlanDetail({
 
   const ap = approvalOf(plan);
   const isAdmin = profile.role === "admin";
+  const vehicles = (plan.work_plan_vehicles ?? []).map(v => v.vehicle).filter(Boolean) as { code: string; plate: string }[];
   const members = (plan.work_plan_members ?? []).map(m => m.employee?.full_name).filter(Boolean) as string[];
   const cancelled = plan.status === "cancelled";
   const past = isPastPlan(plan);
@@ -118,6 +119,12 @@ export function PlanDetail({
           <div className="muted" style={{ marginBottom: 10 }}>ทีมงาน</div>
           {members.length ? <div className="chips">
             {members.map((name, i) => <span className="person" key={i}><b>{name.charAt(0)}</b>{name}</span>)}
+          </div> : <span>-</span>}
+        </div>
+        <div style={{ marginBottom: 24 }}>
+          <div className="muted" style={{ marginBottom: 10 }}>รถที่ใช้งาน</div>
+          {vehicles.length ? <div className="chips">
+            {vehicles.map((v, i) => <span className="person" key={i}>🚗 {v.code} · {v.plate}</span>)}
           </div> : <span>-</span>}
         </div>
         <div>

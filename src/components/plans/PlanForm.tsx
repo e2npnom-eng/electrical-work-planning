@@ -8,16 +8,17 @@ import {
 } from "@/lib/plan-meta";
 import type { Repeat } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
-import type { ApprovalStatus, Conflict, WorkPlan } from "@/types/plan";
+import type { ApprovalStatus, Conflict, Vehicle, WorkPlan } from "@/types/plan";
 
 export type Prefill = {
   title?: string; controller_id?: string; location?: string; start_at?: string; end_at?: string;
-  work_type?: string; description?: string; memberIds?: string[]; copied?: boolean;
+  work_type?: string; description?: string; memberIds?: string[]; vehicleIds?: string[]; copied?: boolean;
 };
 
 type Props = {
   profile: EmployeeProfile;
   employees: EmployeeProfile[];
+  vehicles: Vehicle[];
   plan: WorkPlan | null;
   prefill?: Prefill;
   onClose: () => void;
@@ -28,22 +29,24 @@ const REPEATS: [Repeat, string][] = [
   ["none", "ไม่ซ้ำ"], ["weekly", "ทุกสัปดาห์"], ["biweekly", "ทุก 2 สัปดาห์"], ["monthly", "ทุกเดือน"]
 ];
 
-export function PlanForm({ profile, employees, plan, prefill, onClose, onSaved }: Props) {
+export function PlanForm({ profile, employees, vehicles, plan, prefill, onClose, onSaved }: Props) {
   const supabase = useMemo(() => createClient(), []);
   const isAdmin = profile.role === "admin";
   const init = plan
     ? {
         title: plan.title, controller_id: plan.controller_id, location: plan.location,
         start_at: plan.start_at, end_at: plan.end_at, work_type: plan.work_type ?? "maintenance",
-        description: plan.description ?? "", memberIds: (plan.work_plan_members ?? []).map(m => m.employee_id)
+        description: plan.description ?? "", memberIds: (plan.work_plan_members ?? []).map(m => m.employee_id),
+        vehicleIds: (plan.work_plan_vehicles ?? []).map(v => v.vehicle_id)
       }
     : {
         title: prefill?.title ?? "", controller_id: prefill?.controller_id ?? profile.id,
         location: prefill?.location ?? "", start_at: prefill?.start_at, end_at: prefill?.end_at,
         work_type: prefill?.work_type ?? "maintenance", description: prefill?.description ?? "",
-        memberIds: prefill?.memberIds ?? []
+        memberIds: prefill?.memberIds ?? [], vehicleIds: prefill?.vehicleIds ?? []
       };
   const originalMembers = useRef<string[]>(init.memberIds);
+  const originalVehicles = useRef<string[]>(init.vehicleIds);
 
   const [title, setTitle] = useState(init.title);
   const [controllerId, setControllerId] = useState(init.controller_id);
@@ -53,6 +56,8 @@ export function PlanForm({ profile, employees, plan, prefill, onClose, onSaved }
   const [workType, setWorkType] = useState(init.work_type);
   const [description, setDescription] = useState(init.description);
   const [memberIds, setMemberIds] = useState<string[]>(init.memberIds);
+  const [vehicleIds, setVehicleIds] = useState<string[]>(init.vehicleIds);
+  const [busyVehicles, setBusyVehicles] = useState<Record<string, string>>({});
   const [memberQuery, setMemberQuery] = useState("");
   const [repeat, setRepeat] = useState<Repeat>("none");
   const [repeatCount, setRepeatCount] = useState(4);
@@ -74,6 +79,25 @@ export function PlanForm({ profile, employees, plan, prefill, onClose, onSaved }
   function toggleMember(id: string) {
     setMemberIds(cur => cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]);
   }
+
+  function toggleVehicle(id: string) {
+    setVehicleIds(cur => cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]);
+  }
+
+  // รถที่ถูกใช้ในช่วงเวลานี้แล้ว -> แสดงว่าใครใช้งานอะไร
+  useEffect(() => {
+    if (!startAt || !endAt || new Date(endAt) <= new Date(startAt)) { setBusyVehicles({}); return; }
+    const t = setTimeout(async () => {
+      const { data, error: rpcError } = await supabase.rpc("busy_vehicles", {
+        p_start: new Date(startAt).toISOString(), p_end: new Date(endAt).toISOString(), p_exclude: plan?.id ?? null
+      });
+      if (rpcError) return;
+      const m: Record<string, string> = {};
+      for (const r of (data ?? []) as { vehicle_id: string; title: string }[]) m[r.vehicle_id] = m[r.vehicle_id] ? `${m[r.vehicle_id]}, ${r.title}` : r.title;
+      setBusyVehicles(m);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [supabase, startAt, endAt, plan?.id]);
 
   useEffect(() => {
     if (!startAt || !endAt || new Date(endAt) <= new Date(startAt)) { setBusyIds([]); return; }
@@ -167,6 +191,25 @@ export function PlanForm({ profile, employees, plan, prefill, onClose, onSaved }
         if (memberError) {
           setSaving(false);
           window.alert("บันทึกแผนงานแล้ว แต่บันทึกทีมงานไม่สำเร็จ: " + memberError.message + "\nกรุณาเปิดแผนงานแล้วแก้ไขทีมงานอีกครั้ง");
+          onSaved();
+          return;
+        }
+      }
+    }
+    const vBefore = [...originalVehicles.current].sort().join(",");
+    const vAfter = [...vehicleIds].sort().join(",");
+    if (!plan || vBefore !== vAfter) {
+      if (plan) {
+        const { error: removeError } = await supabase.from("work_plan_vehicles").delete().eq("work_plan_id", plan.id);
+        if (removeError) { setSaving(false); setError(removeError.message); return; }
+      }
+      if (vehicleIds.length) {
+        const { error: vError } = await supabase.from("work_plan_vehicles").insert(
+          planIds.flatMap(id => vehicleIds.map(vehicle_id => ({ work_plan_id: id, vehicle_id })))
+        );
+        if (vError) {
+          setSaving(false);
+          window.alert("บันทึกแผนงานแล้ว แต่บันทึกรถไม่สำเร็จ: " + vError.message + "\nกรุณาเปิดแผนงานแล้วแก้ไขรถอีกครั้ง");
           onSaved();
           return;
         }
@@ -294,6 +337,34 @@ export function PlanForm({ profile, employees, plan, prefill, onClose, onSaved }
               ))}
             </div>
           </div>
+          {vehicles.length > 0 && (
+            <div className="field">
+              <div className="member-head">
+                <span className="field-label">รถที่ใช้งาน</span>
+                <span className="muted">
+                  เลือกแล้ว {vehicleIds.length} คัน
+                  {vehicleIds.length > 0 && <>{" · "}<button type="button" className="link-btn" onClick={() => setVehicleIds([])}>ล้างที่เลือก</button></>}
+                </span>
+              </div>
+              <div className="member-list vehicle-list" role="group" aria-label="รถที่ใช้งาน">
+                {vehicles.map(v => {
+                  const used = busyVehicles[v.id];
+                  const checked = vehicleIds.includes(v.id);
+                  return (
+                    <label key={v.id} className={`member-item${used && !checked ? " is-busy" : ""}`}>
+                      <input type="checkbox" checked={checked} onChange={() => toggleVehicle(v.id)} />
+                      <span>🚗 {v.code}</span>
+                      <small>{v.plate}</small>
+                      {used && <em className="veh-used">ถูกใช้แล้ว: {used}</em>}
+                    </label>
+                  );
+                })}
+              </div>
+              {vehicleIds.some(id => busyVehicles[id]) && (
+                <p className="warn-box" style={{ marginTop: 8 }}>รถที่เลือกมีแผนงานอื่นใช้ในช่วงเวลานี้ — บันทึกได้ แต่ควรตรวจสอบกับผู้เกี่ยวข้อง</p>
+              )}
+            </div>
+          )}
           <div className="field"><label htmlFor="pf-desc">รายละเอียดเพิ่มเติม</label>
             <textarea id="pf-desc" value={description} onChange={e => setDescription(e.target.value)} /></div>
 
