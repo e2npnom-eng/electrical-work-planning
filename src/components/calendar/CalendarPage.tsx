@@ -306,10 +306,6 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   const myDone = mineSpan.filter(p => p.status !== "cancelled" && p.approval_status === "approved" && new Date(p.end_at).getTime() < nowMs).length;
   const myCancelled = mineSpan.filter(p => p.status === "cancelled").length;
   const myEdit = mineSpan.filter(p => p.status !== "cancelled" && p.approval_status === "returned").length;
-  // การ์ดสถานะการอนุมัติ (ด้านบน)
-  const cntCancelReq = todo.filter(p => p.cancel_requested_at).length;
-  const cntPending = todo.filter(p => p.approval_status === "pending" && !p.cancel_requested_at).length;
-  const cntReturned = todo.filter(p => p.approval_status === "returned" && !p.cancel_requested_at).length;
   const ongoingCount = window2.filter(p => p.status !== "cancelled"
     && new Date(p.start_at).getTime() <= nowMs && new Date(p.end_at).getTime() >= nowMs).length;
   const freeVehicles = vehicleToday.filter(x => x.uses.length === 0).length;
@@ -343,21 +339,21 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
         <div className={`stat stat-approval${todo.length ? " has-todo" : ""}`}>
           <div className="stat-body">
             <span className="muted">{isAdmin ? "รออนุมัติ / ขอยกเลิก" : "สถานะการอนุมัติของฉัน"}</span>
-            <strong>{todo.length} <small className="muted">รายการ</small></strong>
-            <div className="ap-chips">
-              <span className="ap-chip ap-pending">รออนุมัติ {cntPending}</span>
-              {!isAdmin && <span className="ap-chip ap-returned">ส่งกลับแก้ไข {cntReturned}</span>}
-              <span className="ap-chip ap-cancel">ขอยกเลิก {cntCancelReq}</span>
-            </div>
-            {todo.slice(0, 3).map(p => (
-              <button key={p.id} className="ap-item" onClick={() => setSelected(p)}>
-                <span>{fmtTime(p.start_at)}</span> {p.title}
-              </button>
-            ))}
+            {todo.slice(0, 3).map(p => {
+              const kind = p.cancel_requested_at ? "cancel" : p.approval_status === "returned" ? "returned" : "pending";
+              return (
+                <button key={p.id} className={`ap-item ap-${kind}`} onClick={() => setSelected(p)}>
+                  <span>{fmtTime(p.start_at)}</span> {p.title}
+                </button>
+              );
+            })}
             {todo.length > 3 && <small className="muted">และอีก {todo.length - 3} รายการ</small>}
             {todo.length === 0 && <small className="muted">{isAdmin ? "ไม่มีแผนที่รออนุมัติ" : "ไม่มีรายการค้าง"}</small>}
           </div>
-          <i className="stat-ico" style={{ background: "#FDE8E2" }} aria-hidden="true">🔔</i>
+          <span className="bell" aria-label={`${todo.length} รายการ`}>
+            <i className="stat-ico" style={{ background: "#FDE8E2" }} aria-hidden="true">🔔</i>
+            {todo.length > 0 && <b className="bell-count">{todo.length}</b>}
+          </span>
         </div>
       </div>
 
@@ -437,11 +433,6 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
       </div>
 
       <div className="home-bottom">
-        <section className="panel side-panel bottom-panel">
-          <div className="today-head"><h2>พรุ่งนี้</h2></div>
-          {tomorrowList.length === 0 ? <p className="muted">ไม่มีงานพรุ่งนี้</p>
-            : tomorrowList.map(p => <PlanItem key={p.id} plan={p} showWho={scope === "all"} onOpen={setSelected} />)}
-        </section>
         <section className="panel side-panel bottom-panel sum-panel">
           <div className="today-head"><h2>สรุปสถานะงานของฉัน</h2><span className="muted" style={{ fontSize: 13 }}>ในช่วงที่แสดงในปฏิทิน</span></div>
           <div className="sum-grid">
@@ -449,6 +440,11 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
             <div className="sum-box sum-cancel"><strong>{myCancelled}</strong><span>ยกเลิก</span></div>
             <div className="sum-box sum-edit"><strong>{myEdit}</strong><span>แก้ไข (ส่งกลับ)</span></div>
           </div>
+        </section>
+        <section className="panel side-panel bottom-panel">
+          <div className="today-head"><h2>พรุ่งนี้</h2></div>
+          {tomorrowList.length === 0 ? <p className="muted">ไม่มีงานพรุ่งนี้</p>
+            : tomorrowList.map(p => <PlanItem key={p.id} plan={p} showWho={scope === "all"} onOpen={setSelected} />)}
         </section>
       </div>
 
