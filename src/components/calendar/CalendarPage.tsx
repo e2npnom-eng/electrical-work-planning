@@ -25,6 +25,8 @@ type Range = { start: string; end: string };
 type Props = { profile: EmployeeProfile; initialPlanId?: string };
 
 const DAY = 86400000;
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const fromYmd = (v: string) => { const [y, m, d] = v.split("-").map(Number); return new Date(y, m - 1, d); };
 const PAST = { bg: "#E4E0EC", fg: "#5F5875" }; // งานที่ผ่านไปแล้ว
 const CANCELLED = { bg: "#F1EFF5", fg: "#8B849C" }; // งานที่ยกเลิกแล้ว
 const dayStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -75,6 +77,8 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [vehDate, setVehDate] = useState(() => ymd(new Date()));
+  const [vehPlans, setVehPlans] = useState<WorkPlan[]>([]);
   const [toast, setToast] = useState("");
   const [form, setForm] = useState<{ plan: WorkPlan | null; prefill?: Prefill } | null>(null);
   const [selected, setSelected] = useState<WorkPlan | null>(null);
@@ -114,6 +118,14 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
     if (!b.error) setAttention((b.data ?? []) as unknown as WorkPlan[]);
   }, [supabase]);
 
+  const loadVeh = useCallback(async () => {
+    const s = fromYmd(vehDate);
+    const e = new Date(s.getFullYear(), s.getMonth(), s.getDate() + 1);
+    const { data, error: err } = await supabase.from("work_plans").select(PLAN_SELECT)
+      .lt("start_at", e.toISOString()).gt("end_at", s.toISOString()).neq("status", "cancelled").order("start_at");
+    if (!err) setVehPlans((data ?? []) as unknown as WorkPlan[]);
+  }, [supabase, vehDate]);
+
   const refreshSelected = useCallback(async () => {
     const id = selectedIdRef.current;
     if (!id) return;
@@ -122,8 +134,10 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   }, [supabase]);
 
   const reloadAll = useCallback(async () => {
-    await Promise.all([loadRange(), loadSide(), refreshSelected()]);
-  }, [loadRange, loadSide, refreshSelected]);
+    await Promise.all([loadRange(), loadSide(), loadVeh(), refreshSelected()]);
+  }, [loadRange, loadSide, loadVeh, refreshSelected]);
+
+  useEffect(() => { void loadVeh(); }, [loadVeh]);
 
   useEffect(() => { selectedIdRef.current = selected?.id ?? null; }, [selected]);
 
@@ -223,10 +237,11 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   const todayList = scoped(window2).filter(p => overlaps(p, today, tomorrow))
     .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
   // สถานะรถวันนี้ (ทุกคนเห็นรถทุกคัน ไม่ขึ้นกับตัวกรอง)
-  const todayAll = window2.filter(p => p.status !== "cancelled" && overlaps(p, today, tomorrow))
-    .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
+  const vehDay = fromYmd(vehDate);
+  const vehDayEnd = new Date(vehDay.getFullYear(), vehDay.getMonth(), vehDay.getDate() + 1);
+  const vehIsToday = vehDate === ymd(new Date());
   const vehicleToday = vehicles.map(v => ({
-    v, uses: todayAll.filter(p => (p.work_plan_vehicles ?? []).some(x => x.vehicle_id === v.id))
+    v, uses: vehPlans.filter(p => overlaps(p, vehDay, vehDayEnd)).filter(p => (p.work_plan_vehicles ?? []).some(x => x.vehicle_id === v.id))
   }));
   const tomorrowList = scoped(window2).filter(p => overlaps(p, tomorrow, dayAfter));
   const todo = isAdmin
@@ -240,6 +255,16 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   }
 
   function openNew(prefill?: Prefill) { setForm({ plan: null, prefill }); }
+
+  function shiftVehDate(n: number) { const d = fromYmd(vehDate); setVehDate(ymd(new Date(d.getFullYear(), d.getMonth(), d.getDate() + n))); }
+  function newWithVehicle(v: Vehicle) {
+    const d = fromYmd(vehDate);
+    openNew({
+      start_at: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 8, 30).toISOString(),
+      end_at: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 16, 30).toISOString(),
+      vehicleIds: [v.id]
+    });
+  }
 
   function onDateClick(arg: DateClickArg) {
     const d = arg.date;
@@ -297,7 +322,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
     else { closeDetail(); await reloadAll(); }
   }
 
-  const dateLabel = today.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long" });
+  const dateLabel = vehDay.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const nowMs = Date.now();
   const inSpan = span
     ? plans.filter(p => p.status !== "cancelled" && p.start_at >= span.start && p.start_at < span.end)
@@ -410,18 +435,29 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
         {vehicles.length > 0 && (
           <section className="panel side-panel vehicle-panel" aria-label="สถานะรถวันนี้">
             <div className="today-head">
-              <h2>รถวันนี้ <small>{dateLabel}</small></h2>
+              <h2>{vehIsToday ? "รถวันนี้" : "สถานะรถ"}</h2>
               <span className="count-pill veh-count">ว่าง {freeVehicles}/{vehicles.length}</span>
             </div>
+            <div className="veh-date">
+              <button type="button" className="veh-date-btn" aria-label="วันก่อนหน้า" onClick={() => shiftVehDate(-1)}>‹</button>
+              <input type="date" value={vehDate} aria-label="เลือกวันที่ดูสถานะรถ"
+                onChange={e => { if (e.target.value) setVehDate(e.target.value); }} />
+              <button type="button" className="veh-date-btn" aria-label="วันถัดไป" onClick={() => shiftVehDate(1)}>›</button>
+              {!vehIsToday && <button type="button" className="veh-date-today" onClick={() => setVehDate(ymd(new Date()))}>วันนี้</button>}
+            </div>
+            <p className="muted veh-date-label">{dateLabel} · กดที่รถเพื่อเพิ่มแผนงาน</p>
             <div className="veh-list">
               {vehicleToday.map(({ v, uses }) => (
-                <div key={v.id} className={`veh-row ${uses.length ? "veh-busy" : "veh-free"}`}>
+                <div key={v.id} className={`veh-row ${uses.length ? "veh-busy" : "veh-free"}`} role="button" tabIndex={0}
+                  title={`เพิ่มแผนงานโดยใช้รถ ${v.code}`}
+                  onClick={() => newWithVehicle(v)}
+                  onKeyDown={e => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); newWithVehicle(v); } }}>
                   <div className="veh-top">
                     <span><b>🚗 {v.code}</b>{v.plate && <small className="muted"> {v.plate}</small>}</span>
                     <span className="veh-state">{uses.length ? "ใช้งาน" : "ว่าง"}</span>
                   </div>
                   {uses.map(p => (
-                    <button key={p.id} className="veh-use" onClick={() => setSelected(p)}>
+                    <button key={p.id} className="veh-use" onClick={e => { e.stopPropagation(); setSelected(p); }}>
                       <span>{fmtTime(p.start_at)}–{fmtTime(p.end_at)}</span> {p.title}
                     </button>
                   ))}
