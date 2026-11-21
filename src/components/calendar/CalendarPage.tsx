@@ -16,7 +16,7 @@ import type { Prefill } from "@/components/plans/PlanForm";
 import { PlanDetail } from "@/components/plans/PlanDetail";
 import {
   APPROVALS, PLAN_SELECT, WORK_TYPES, approvalOf, canDeletePlan, canEditPlan,
-  canViewAll, fmtTime, isMine, typeIcon
+  canViewAll, expiryLabel, expiryOf, fmtDate, fmtTime, isMine, typeIcon
 } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
 import type { ApprovalStatus, Vehicle, WorkPlan } from "@/types/plan";
@@ -45,7 +45,10 @@ function PlanItem({ plan, showWho, onOpen, no }: { plan: WorkPlan; showWho: bool
         {(showWho || no !== undefined) && plan.controller && <small>👤 {plan.controller.full_name}{(plan.work_plan_members?.length ?? 0) > 0 ? ` +${plan.work_plan_members!.length} คน` : ""}</small>}
         {(plan.work_plan_vehicles?.length ?? 0) > 0 && <small>🚗 {plan.work_plan_vehicles!.map(v => v.vehicle?.code).filter(Boolean).join(", ")}</small>}
       </span>
+      <span className="badges">
+        {expiryOf(plan) && <span className={`mini-badge expiry-badge expiry-${expiryOf(plan)}`}>{expiryLabel(expiryOf(plan)!)}</span>}
       <span className="mini-badge" style={asking ? { background: "#F8D7D2", color: "#7A1D12" } : { background: ap.bg, color: ap.fg }}>{asking ? "ขอยกเลิก" : ap.label}</span>
+      </span>
     </button>
   );
 }
@@ -205,10 +208,10 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
     const asking = Boolean(p.cancel_requested_at) && !cancelled;
     const who = p.creator?.full_name ? `วางโดย ${p.creator.full_name}` : "";
     return {
-      id: p.id, title: `${rank ? `#${rank} ` : ""}${asking ? "⚠ " : ""}${typeIcon(p.work_type)} ${p.title}`, display: "block",
+      id: p.id, title: `${rank ? `#${rank} ` : ""}${asking ? "⚠ " : ""}${expiryOf(p) ? (expiryOf(p) === "over" ? "❗ " : "⏰ ") : ""}${typeIcon(p.work_type)} ${p.title}`, display: "block",
       start: p.start_at, end: p.end_at,
       backgroundColor: cancelled ? CANCELLED.bg : past ? PAST.bg : c.solid, textColor: cancelled ? CANCELLED.fg : past ? PAST.fg : c.onSolid, borderColor: c.solid,
-      classNames: [...(p.status === "cancelled" ? ["ev-cancelled"] : []), ...(past ? ["ev-past"] : [])],
+      classNames: [...(p.status === "cancelled" ? ["ev-cancelled"] : []), ...(past ? ["ev-past"] : []), ...(expiryOf(p) ? [`ev-expiring-${expiryOf(p)}`] : [])],
       extendedProps: { plan: p, created: ord(p), who, past: past || cancelled }
     };
   }), [filtered, plans]);
@@ -227,7 +230,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   }));
   const tomorrowList = scoped(window2).filter(p => overlaps(p, tomorrow, dayAfter));
   const todo = isAdmin
-    ? attention.filter(p => p.approval_status === "pending" || p.cancel_requested_at)
+    ? attention.filter(p => p.approval_status === "pending" || p.cancel_requested_at || expiryOf(p) === "over")
     : attention.filter(p => p.created_by === profile.id);
 
   function closeDetail() {
@@ -317,11 +320,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
       <div className="page-head">
         <div>
           <h1>ปฏิทินแผนงาน</h1>
-          <ul className="head-notes muted">
-            <li>เห็นแผนงานของทุกคน</li>
-            <li>แผนที่ซ้ำสถานที่หรือซ้ำคนจะมีเลขลำดับ #1 (วางก่อน) #2 ...</li>
-            <li>กดวันที่เพื่อสร้างแผนได้ทันที</li>
-          </ul>
+          <p className="head-notes muted">เห็นแผนงานของทุกคน, แผนที่ซ้ำสถานที่หรือซ้ำคนจะมีเลขลำดับ #1 (วางก่อน) #2 ..., กดวันที่เพื่อสร้างแผนได้ทันที</p>
         </div>
         <div className="head-actions">
           <div className="filters head-filters">
@@ -356,10 +355,10 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
           <div className="stat-body">
             <span className="muted">{isAdmin ? "รออนุมัติ / ขอยกเลิก" : "สถานะการอนุมัติของฉัน"}</span>
             {todo.slice(0, 3).map(p => {
-              const kind = p.cancel_requested_at ? "cancel" : p.approval_status === "returned" ? "returned" : "pending";
+              const kind = p.cancel_requested_at ? "cancel" : expiryOf(p) === "over" ? "over" : p.approval_status === "returned" ? "returned" : "pending";
               return (
                 <button key={p.id} className={`ap-item ap-${kind}`} onClick={() => setSelected(p)}>
-                  <span>{fmtTime(p.start_at)}</span> {p.title}
+                  <span>{kind === "over" ? `${fmtDate(p.start_at)} ` : ""}{fmtTime(p.start_at)}</span> {p.title}{kind === "over" ? " · ผ่านวันแล้ว รอยกเลิก" : ""}
                 </button>
               );
             })}
@@ -391,7 +390,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
             <span key={k}><i style={{ background: APPROVALS[k].solid }} />{APPROVALS[k].label}</span>
           ))}
           <span><i style={{ background: PAST.bg, boxShadow: "inset 0 0 0 1px #b9b2cc" }} />ผ่านไปแล้ว / ยกเลิก</span>
-          <span className="muted">· งานที่ยกเลิกจะขีดฆ่า · ⚠ = มีคำขอยกเลิก · ไอคอนหน้าชื่อบอกประเภทงาน</span>
+          <span className="muted">· ⏰ = ยังไม่อนุมัติและใกล้หมดเวลา · ❗ = ผ่านวันแล้วแต่ยังไม่อนุมัติ (แอดมินต้องยกเลิก) · งานที่ยกเลิกจะขีดฆ่า · ⚠ = มีคำขอยกเลิก · ไอคอนหน้าชื่อบอกประเภทงาน</span>
         </div>
       </section>
       <aside className="home-side">
