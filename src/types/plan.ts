@@ -3,6 +3,8 @@ export type ApprovalStatus = "draft" | "pending" | "approved" | "returned";
 
 export type PersonRef = { id: string; full_name: string; employee_code: string };
 
+export type Vehicle = { id: string; code: string; plate: string; sort_order?: number; active?: boolean };
+
 export type WorkPlan = {
   id: string;
   title: string;
@@ -29,6 +31,7 @@ export type WorkPlan = {
   creator?: PersonRef | null;
   approver?: PersonRef | null;
   cancel_requester?: PersonRef | null;
+  work_plan_vehicles?: { vehicle_id: string; vehicle?: Vehicle | null }[];
   work_plan_members?: { employee_id: string; employee?: PersonRef | null }[];
 };
 
