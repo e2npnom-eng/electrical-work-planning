@@ -404,3 +404,40 @@
   .sum-box strong { font-size: 28px; }
 }
 @media print { .stat-approval, .sum-panel { display: none !important; } }
+
+/* การ์ดสถานะการอนุมัติ: ตัวเลขที่กระดิ่ง + สีข้อความตามสถานะ */
+.bell { position: relative; flex: none; display: inline-flex; }
+.bell .stat-ico { width: 56px; height: 56px; font-size: 26px; }
+.bell-count { position: absolute; top: -8px; right: -8px; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 999px;
+  background: #D64A2B; color: #fff; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; border: 2px solid #fff; }
+.ap-item { font-weight: 600; }
+.ap-pending, .ap-pending span { color: #B26A00; }
+.ap-returned, .ap-returned span { color: #C0392B; }
+.ap-cancel, .ap-cancel span { color: #6A3FC0; }
+.ap-cancel { text-decoration: line-through; text-decoration-thickness: 1.5px; }
+
+/* ---- เน้นสถานะการอนุมัติ: เติมสีในกรอบรายการ + ตัวเลขที่กระดิ่งเด่นขึ้น ---- */
+.ap-item { padding: 9px 12px; font-size: 14.5px; font-weight: 700; border-width: 0; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+.ap-pending { background: #FFC400; }
+.ap-pending, .ap-pending span { color: #3A2A00; }
+.ap-returned { background: #D64A2B; }
+.ap-returned, .ap-returned span { color: #fff; }
+.ap-cancel { background: #6A3FC0; }
+.ap-cancel, .ap-cancel span { color: #fff; }
+.ap-item:hover { filter: brightness(1.05); background-clip: padding-box; }
+.ap-pending:hover { background: #FFCF33; }
+.ap-returned:hover { background: #E0583A; }
+.ap-cancel:hover { background: #7A52CF; }
+.stat-approval.has-todo { background: #FFF3C4; border-color: #FFC400; border-width: 2px; }
+.bell .stat-ico { width: 64px; height: 64px; font-size: 30px; background: #FFE08A !important; }
+.bell-count { top: -12px; right: -12px; min-width: 38px; height: 38px; padding: 0 9px; font-size: 22px; font-weight: 800;
+  border-width: 3px; box-shadow: 0 3px 10px rgba(214, 74, 43, .55); animation: bellpulse 1.6s ease-out infinite; }
+@keyframes bellpulse {
+  0% { box-shadow: 0 0 0 0 rgba(214, 74, 43, .6); }
+  70% { box-shadow: 0 0 0 12px rgba(214, 74, 43, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(214, 74, 43, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .bell-count { animation: none; } }
+/* กรอบนอกการ์ดสถานะการอนุมัติเป็นสีขาว */
+.stat-approval, .stat-approval.has-todo { background: #fff; border: 1px solid var(--line); }
+.bell .stat-ico { background: #FFE08A !important; }
