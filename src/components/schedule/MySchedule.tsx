@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PlanDetail } from "@/components/plans/PlanDetail";
-import { PLAN_SELECT, approvalOf, canViewAll, fmtDate, fmtTime } from "@/lib/plan-meta";
+import { PLAN_SELECT, approvalOf, byEmployeeCode, canViewAll, fmtDate, fmtTime } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
 import type { WorkPlan } from "@/types/plan";
 
@@ -29,7 +29,7 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
     if (!viewAll) return;
     void supabase.from("employees").select("id, employee_code, full_name, role, active")
       .eq("active", true).order("full_name")
-      .then(({ data }) => { if (data) setPeople(data as EmployeeProfile[]); });
+      .then(({ data }) => { if (data) setPeople(byEmployeeCode(data as EmployeeProfile[])); });
   }, [supabase, viewAll]);
 
   useEffect(() => {
