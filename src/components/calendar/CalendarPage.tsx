@@ -42,7 +42,7 @@ function PlanItem({ plan, showWho, onOpen, no }: { plan: WorkPlan; showWho: bool
       <span className="today-main">
         <b className={plan.status === "cancelled" ? "ev-cancelled" : undefined}>{typeIcon(plan.work_type)} {plan.title}</b>
         <small>📍 {plan.location}</small>
-        {(showWho || no !== undefined) && plan.controller && <small>👤 {plan.controller.full_name}{(plan.work_plan_members?.length ?? 0) > 0 ? ` + ทีมงาน ${plan.work_plan_members!.length} คน` : ""}</small>}
+        {(showWho || no !== undefined) && plan.controller && <small>👤 {plan.controller.full_name}{(plan.work_plan_members?.length ?? 0) > 0 ? ` +${plan.work_plan_members!.length} คน` : ""}</small>}
         {(plan.work_plan_vehicles?.length ?? 0) > 0 && <small>🚗 {plan.work_plan_vehicles!.map(v => v.vehicle?.code).filter(Boolean).join(", ")}</small>}
       </span>
       <span className="mini-badge" style={asking ? { background: "#F8D7D2", color: "#7A1D12" } : { background: ap.bg, color: ap.fg }}>{asking ? "ขอยกเลิก" : ap.label}</span>
@@ -67,6 +67,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   const [attention, setAttention] = useState<WorkPlan[]>([]);
   const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
   const [range, setRange] = useState<Range | null>(null);
+  const [span, setSpan] = useState<Range | null>(null); // ช่วงที่แสดงจริง (เดือน/สัปดาห์)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
@@ -168,6 +169,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
 
   const onDatesSet = useCallback((arg: DatesSetArg) => {
     const next = { start: arg.start.toISOString(), end: arg.end.toISOString() };
+    setSpan({ start: arg.view.currentStart.toISOString(), end: arg.view.currentEnd.toISOString() });
     setRange(cur => cur && cur.start === next.start && cur.end === next.end ? cur : next);
   }, []);
 
@@ -293,6 +295,15 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   }
 
   const dateLabel = today.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long" });
+  const nowMs = Date.now();
+  const inSpan = span
+    ? plans.filter(p => p.status !== "cancelled" && p.start_at >= span.start && p.start_at < span.end)
+    : [];
+  const finishedCount = inSpan.filter(p => new Date(p.end_at).getTime() < nowMs).length;
+  const ongoingCount = window2.filter(p => p.status !== "cancelled"
+    && new Date(p.start_at).getTime() <= nowMs && new Date(p.end_at).getTime() >= nowMs).length;
+  const freeVehicles = vehicleToday.filter(x => x.uses.length === 0).length;
+
   const hasFilter = Boolean(q || fType || fApproval || onlyMine);
 
   return (
@@ -304,68 +315,29 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
             เห็นแผนงานของทุกคน · แผนที่ซ้ำสถานที่หรือซ้ำคนจะมีเลขลำดับ #1 (วางก่อน) #2 ... · กดวันที่เพื่อสร้างแผนได้ทันที
           </p>
         </div>
-        <button className="btn" onClick={() => openNew()}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-          เพิ่มแผนงาน
-        </button>
+        <div className="head-actions">
+          <label className="head-search">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+            <input type="search" placeholder="ค้นหาแผนงาน / สถานที่ / ชื่อคน" aria-label="ค้นหา" value={q} onChange={e => setQ(e.target.value)} />
+          </label>
+          <button className="btn" onClick={() => openNew()}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            เพิ่มแผนงาน
+          </button>
+        </div>
       </div>
 
-      {vehicles.length > 0 && (
-        <section className="panel vehicle-panel" aria-label="สถานะรถวันนี้">
-          <div className="today-head"><h2>รถวันนี้ <small>{dateLabel}</small></h2></div>
-          <div className="veh-grid">
-            {vehicleToday.map(({ v, uses }) => (
-              <div key={v.id} className={`veh-card ${uses.length ? "veh-busy" : "veh-free"}`}>
-                <div className="veh-top">
-                  <b>🚗 {v.code}</b>
-                  <span className="veh-state">{uses.length ? "ใช้งาน" : "ว่าง"}</span>
-                </div>
-                {v.plate && <small className="muted">{v.plate}</small>}
-                {uses.map(p => (
-                  <button key={p.id} className="veh-use" onClick={() => setSelected(p)}>
-                    <span>{fmtTime(p.start_at)}–{fmtTime(p.end_at)}</span> {p.title}
-                  </button>
-                ))}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <div className="today-grid">
-        <section className="panel today-col">
-          <div className="today-head">
-            <h2>วันนี้ <small>{dateLabel}</small></h2>
-            {(
-              <div className="seg" role="group" aria-label="ขอบเขต">
-                <button aria-pressed={scope === "mine"} onClick={() => setScope("mine")}>ของฉัน</button>
-                <button aria-pressed={scope === "all"} onClick={() => setScope("all")}>ทุกคน</button>
-              </div>
-            )}
-          </div>
-          {todayList.length === 0 ? <p className="muted">ไม่มีงานวันนี้</p>
-            : todayList.map((p, i) => <PlanItem key={p.id} plan={p} no={i + 1} showWho={scope === "all"} onOpen={setSelected} />)}
-        </section>
-        <section className="panel today-col">
-          <div className="today-head"><h2>พรุ่งนี้</h2></div>
-          {tomorrowList.length === 0 ? <p className="muted">ไม่มีงานพรุ่งนี้</p>
-            : tomorrowList.map(p => <PlanItem key={p.id} plan={p} showWho={scope === "all"} onOpen={setSelected} />)}
-        </section>
-        <section className="panel today-col todo-col">
-          <div className="today-head">
-            <h2>{isAdmin ? "รออนุมัติ / ขอยกเลิก" : "สถานะการอนุมัติของฉัน"} {todo.length > 0 && <span className="count-pill">{todo.length}</span>}</h2>
-          </div>
-          {todo.length === 0 ? <p className="muted">{isAdmin ? "ไม่มีแผนที่รออนุมัติ" : "ไม่มีรายการค้าง"}</p>
-            : todo.slice(0, 6).map(p => <PlanItem key={p.id} plan={p} showWho={isAdmin} onOpen={setSelected} />)}
-          {todo.length > 6 && <p className="muted">และอีก {todo.length - 6} รายการ (กรองสถานะ “รออนุมัติ” ในปฏิทินเพื่อดูทั้งหมด)</p>}
-        </section>
+      <div className="grid-cards">
+        <div className="stat"><div><span className="muted">แผนงานในช่วงที่แสดง</span><strong>{inSpan.length} <small className="muted">แผนงาน</small></strong></div><i className="stat-ico" style={{ background: "#EDE6FA" }} aria-hidden="true">📅</i></div>
+        <div className="stat"><div><span className="muted">กำลังดำเนินการ</span><strong>{ongoingCount} <small className="muted">แผนงาน</small></strong></div><i className="stat-ico" style={{ background: "#FFF0D6" }} aria-hidden="true">⚡</i></div>
+        <div className="stat"><div><span className="muted">เสร็จสิ้นแล้ว</span><strong>{finishedCount} <small className="muted">แผนงาน</small></strong></div><i className="stat-ico" style={{ background: "#DFF3EA" }} aria-hidden="true">✅</i></div>
       </div>
 
       {error && <p className="error" role="alert">{error}</p>}
 
-      <section className="panel">
+      <div className="home-grid">
+      <section className="panel cal-panel">
         <div className="filters">
-          <input type="search" placeholder="ค้นหาชื่องาน / สถานที่ / ชื่อคน" aria-label="ค้นหา" value={q} onChange={e => setQ(e.target.value)} />
           <select aria-label="ประเภทงาน" value={fType} onChange={e => setFType(e.target.value)}>
             <option value="">ทุกประเภทงาน</option>
             {WORK_TYPES.map(t => <option key={t.value} value={t.value}>{t.icon} {t.label}</option>)}
@@ -396,6 +368,61 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
           <span className="muted">· งานที่ยกเลิกจะขีดฆ่า · ⚠ = มีคำขอยกเลิก · ไอคอนหน้าชื่อบอกประเภทงาน</span>
         </div>
       </section>
+      <aside className="home-side">
+        {vehicles.length > 0 && (
+          <section className="panel side-panel vehicle-panel" aria-label="สถานะรถวันนี้">
+            <div className="today-head">
+              <h2>รถวันนี้ <small>{dateLabel}</small></h2>
+              <span className="count-pill veh-count">ว่าง {freeVehicles}/{vehicles.length}</span>
+            </div>
+            <div className="veh-list">
+              {vehicleToday.map(({ v, uses }) => (
+                <div key={v.id} className={`veh-row ${uses.length ? "veh-busy" : "veh-free"}`}>
+                  <div className="veh-top">
+                    <span><b>🚗 {v.code}</b>{v.plate && <small className="muted"> {v.plate}</small>}</span>
+                    <span className="veh-state">{uses.length ? "ใช้งาน" : "ว่าง"}</span>
+                  </div>
+                  {uses.map(p => (
+                    <button key={p.id} className="veh-use" onClick={() => setSelected(p)}>
+                      <span>{fmtTime(p.start_at)}–{fmtTime(p.end_at)}</span> {p.title}
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+        <section className="panel side-panel">
+          <div className="today-head">
+            <h2>วันนี้</h2>
+            {(
+              <div className="seg" role="group" aria-label="ขอบเขต">
+                <button aria-pressed={scope === "mine"} onClick={() => setScope("mine")}>ของฉัน</button>
+                <button aria-pressed={scope === "all"} onClick={() => setScope("all")}>ทุกคน</button>
+              </div>
+            )}
+          </div>
+          {todayList.length === 0 ? <p className="muted">ไม่มีงานวันนี้</p>
+            : todayList.map((p, i) => <PlanItem key={p.id} plan={p} no={i + 1} showWho={scope === "all"} onOpen={setSelected} />)}
+        </section>
+      </aside>
+      </div>
+
+      <div className="home-bottom">
+        <section className="panel side-panel bottom-panel">
+          <div className="today-head"><h2>พรุ่งนี้</h2></div>
+          {tomorrowList.length === 0 ? <p className="muted">ไม่มีงานพรุ่งนี้</p>
+            : tomorrowList.map(p => <PlanItem key={p.id} plan={p} showWho={scope === "all"} onOpen={setSelected} />)}
+        </section>
+        <section className="panel side-panel bottom-panel todo-col">
+          <div className="today-head">
+            <h2>{isAdmin ? "รออนุมัติ / ขอยกเลิก" : "สถานะการอนุมัติของฉัน"} {todo.length > 0 && <span className="count-pill">{todo.length}</span>}</h2>
+          </div>
+          {todo.length === 0 ? <p className="muted">{isAdmin ? "ไม่มีแผนที่รออนุมัติ" : "ไม่มีรายการค้าง"}</p>
+            : todo.slice(0, 6).map(p => <PlanItem key={p.id} plan={p} showWho={isAdmin} onOpen={setSelected} />)}
+          {todo.length > 6 && <p className="muted">และอีก {todo.length - 6} รายการ (กรองสถานะ “รออนุมัติ” ในปฏิทินเพื่อดูทั้งหมด)</p>}
+        </section>
+      </div>
 
       {form && <PlanForm profile={profile} employees={employees} vehicles={vehicles} plan={form.plan} prefill={form.prefill}
         onClose={() => setForm(null)}
