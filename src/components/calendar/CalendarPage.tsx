@@ -320,7 +320,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
                   <b>🚗 {v.code}</b>
                   <span className="veh-state">{uses.length ? "ใช้งาน" : "ว่าง"}</span>
                 </div>
-                <small className="muted">{v.plate}</small>
+                {v.plate && <small className="muted">{v.plate}</small>}
                 {uses.map(p => (
                   <button key={p.id} className="veh-use" onClick={() => setSelected(p)}>
                     <span>{fmtTime(p.start_at)}–{fmtTime(p.end_at)}</span> {p.title}
