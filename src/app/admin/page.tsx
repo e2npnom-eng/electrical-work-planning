@@ -11,16 +11,16 @@ export default async function AdminPage() {
 
   const supabase = await createClient();
   const { data } = await supabase.from("employees")
-    .select("id, employee_code, full_name, role, active").order("employee_code");
+    .select("id, employee_code, full_name, role, active, position").order("employee_code");
   const rows = (data ?? []) as Row[];
 
   return <>
     <AppHeader profile={profile} />
-    <main className="page">
+    <main className="page admin-wide">
       <div className="page-head">
         <div>
           <h1>จัดการระบบ</h1>
-          <p className="muted" style={{ margin: 0 }}>กำหนดสิทธิ์ (ผู้ดูแลระบบ / ผู้บริหาร / พนักงาน) และเปิด-ปิดบัญชี · พนักงานทั้งหมด {rows.length} คน</p>
+          <p className="muted" style={{ margin: 0 }}>จัดคนเข้าบทบาท ผู้ดูแลระบบ / ผู้บริหาร / พนักงาน และเปิด-ปิดบัญชี · พนักงานทั้งหมด {rows.length} คน</p>
         </div>
       </div>
       <EmployeeTable initial={rows} meId={profile.id} />
