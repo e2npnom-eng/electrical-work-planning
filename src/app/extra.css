@@ -665,3 +665,22 @@
   .sched-bar .sched-actions { width: 100%; }
   .sched-bar .sched-actions .btn { flex: 1; justify-content: center; }
 }
+
+/* ตารางงานของฉัน: ย่อขนาดภายในกรอบให้กะทัดรัด */
+@media screen {
+  .sched-card { padding: 12px 16px 10px; margin-bottom: 14px; border-radius: 14px; }
+  .sched-grid { gap: 8px 14px; grid-template-columns: minmax(220px, 1.5fr) minmax(170px, 1fr) minmax(200px, 1fr); }
+  .sched-grid .field > label { margin-bottom: 3px; font-size: 12px; }
+  .sched-grid input, .sched-grid select { min-height: 36px; padding-top: 0; padding-bottom: 0; font-size: 13.5px; border-radius: 9px; }
+  .sched-bar { margin-top: 10px; padding-top: 10px; gap: 8px 14px; }
+  .sched-chips { gap: 6px 8px; }
+  .toggle-chip { min-height: 30px; padding: 0 12px; font-size: 13px; }
+  .sched-count { font-size: 12.5px; }
+  .sched-bar .sched-actions { gap: 8px; }
+  .sched-bar .sched-actions .btn { min-height: 34px; padding: 0 14px; font-size: 13.5px; gap: 6px; border-radius: 10px; }
+  .sched-bar .sched-actions .btn svg { width: 15px; height: 15px; }
+  .sched-tip { margin-top: 8px; font-size: 12px; line-height: 1.5; }
+  .sched-tip svg { width: 14px; height: 14px; margin-top: 2px; }
+}
+@media screen and (max-width: 900px) { .sched-grid { grid-template-columns: 1fr 1fr; } }
+@media screen and (max-width: 600px) { .sched-card { padding: 12px; } .sched-grid { grid-template-columns: 1fr; } }
