@@ -702,3 +702,7 @@
   .sc-line { font-size: 13px; line-height: 1.5; color: var(--deep); overflow-wrap: anywhere; }
   .sc-more { margin-top: 4px; font-size: 13px; font-weight: 700; color: var(--brand); }
 }
+
+/* รายละเอียดแผนงาน: ขึ้นบรรทัดตามที่พิมพ์ + ลิงก์กดได้ */
+.detail-text { margin: 0; line-height: 1.7; max-width: 62ch; white-space: pre-wrap; overflow-wrap: anywhere; }
+.auto-link { color: var(--brand); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; word-break: break-all; }
