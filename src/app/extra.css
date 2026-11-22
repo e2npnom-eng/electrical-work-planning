@@ -706,3 +706,67 @@
 /* รายละเอียดแผนงาน: ขึ้นบรรทัดตามที่พิมพ์ + ลิงก์กดได้ */
 .detail-text { margin: 0; line-height: 1.7; max-width: 62ch; white-space: pre-wrap; overflow-wrap: anywhere; }
 .auto-link { color: var(--brand); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; word-break: break-all; }
+
+/* ---------- แดชบอร์ด ---------- */
+@media screen and (min-width: 901px) { .page:has(> .db-wide) { max-width: none; padding-left: 28px; padding-right: 28px; } }
+.db .head-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
+.db-select { min-height: 36px; padding: 0 28px 0 12px; border: 1px solid #d8d0e6; border-radius: 10px; background: #fff; font: inherit; font-size: 13.5px; max-width: 280px; }
+.db .seg button { min-height: 36px; padding: 0 14px; font-size: 13.5px; }
+.db-kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin: 4px 0 16px; }
+.db-kpi { position: relative; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 2px; box-shadow: 0 1px 2px rgba(42,20,80,.04); min-width: 0; }
+.db-kpi-main { background: var(--deep); border-color: var(--deep); color: #fff; }
+.db-kpi-dot { position: absolute; top: 16px; right: 14px; width: 10px; height: 10px; border-radius: 50%; }
+.db-kpi-label { font-size: 13px; font-weight: 600; color: var(--muted); padding-right: 18px; }
+.db-kpi-main .db-kpi-label, .db-kpi-main .db-kpi-hint { color: #D9CCF0; }
+.db-kpi-value { font-size: 34px; line-height: 1.15; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.db-kpi-hint { font-size: 12px; color: var(--muted); }
+.db-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+.db-grid > .panel { margin: 0; min-width: 0; grid-column: span 3; }
+.db-grid > .db-trend-panel { grid-column: span 4; }
+.db-grid > .db-trend-panel + .panel { grid-column: span 2; }
+.db-grid > .db-wide-panel { grid-column: 1 / -1; }
+.db-grid .panel h2 { margin: 0; font-size: 17px; }
+.db-sub { margin: 2px 0 14px; font-size: 12.5px; }
+.db-empty { padding: 28px 8px; text-align: center; margin: 0; }
+.db-trend { position: relative; }
+.db-trend svg { display: block; width: 100%; height: auto; }
+.db-trend-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; margin: 0; pointer-events: none; }
+.db-tip { position: absolute; top: 0; transform: translateX(-50%); background: var(--deep); color: #fff; border-radius: 10px; padding: 6px 10px; font-size: 12.5px; display: flex; flex-direction: column; align-items: center; pointer-events: none; white-space: nowrap; box-shadow: 0 6px 16px rgba(42,20,80,.25); }
+.db-tip span { color: #D9CCF0; }
+.db-table { margin-top: 10px; font-size: 13px; }
+.db-table summary { cursor: pointer; color: var(--brand); font-weight: 600; }
+.db-table table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.db-table th, .db-table td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+.db-stack { display: flex; gap: 2px; height: 22px; border-radius: 8px; overflow: hidden; margin: 6px 0 16px; }
+.db-stack span { min-width: 4px; }
+.db-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.db-legend li { display: grid; grid-template-columns: 12px 1fr auto 44px; align-items: center; gap: 10px; font-size: 14px; }
+.db-legend i { width: 12px; height: 12px; border-radius: 4px; }
+.db-legend b { font-variant-numeric: tabular-nums; }
+.db-legend small { color: var(--muted); text-align: right; font-size: 12.5px; }
+.db-rank { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.db-rank li { display: grid; grid-template-columns: minmax(90px, 34%) 1fr 36px; align-items: center; gap: 10px; font-size: 13.5px; }
+.db-rank-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.db-rank-track { height: 12px; background: #F0EBF7; border-radius: 6px; overflow: hidden; }
+.db-rank-track span { display: block; height: 100%; background: #6B3FA0; border-radius: 0 6px 6px 0; }
+.db-rank b { text-align: right; font-variant-numeric: tabular-nums; }
+.db-upcoming { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.db-upcoming li { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; }
+.db-when, .db-what { display: flex; flex-direction: column; min-width: 0; }
+.db-when b, .db-what b { font-size: 14px; }
+.db-when small, .db-what small { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media screen and (max-width: 1280px) { .db-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media screen and (max-width: 1100px) {
+  .db-grid > .panel, .db-grid > .db-trend-panel, .db-grid > .db-trend-panel + .panel { grid-column: 1 / -1; }
+}
+@media screen and (max-width: 700px) {
+  .db .head-actions { justify-content: flex-start; width: 100%; }
+  .db-select { max-width: 100%; width: 100%; }
+  .db .seg { width: 100%; } .db .seg button { flex: 1; padding: 0 6px; }
+  .db-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .db-kpi { padding: 12px; } .db-kpi-value { font-size: 28px; }
+  .db-rank li { grid-template-columns: minmax(80px, 38%) 1fr 30px; }
+  .db-upcoming li { grid-template-columns: minmax(0, 1fr) auto; }
+  .db-upcoming .db-when { grid-column: 1 / -1; flex-direction: row; gap: 8px; align-items: baseline; }
+}
+@media print { .db-select, .db .seg { display: none; } }
