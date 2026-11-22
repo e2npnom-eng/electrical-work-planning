@@ -19,6 +19,10 @@ const NAV: { href: string; label: string; icon: ReactNode }[] = [
     icon: <svg {...svgProps}><rect x="3.5" y="5" width="17" height="15" rx="2.5" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
   },
   {
+    href: "/dashboard", label: "แดชบอร์ด",
+    icon: <svg {...svgProps}><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
+  },
+  {
     href: "/my-schedule", label: "ตารางงานของฉัน",
     icon: <svg {...svgProps}><rect x="3.5" y="4" width="17" height="16" rx="2.5" /><path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5V20" /></svg>
   },
