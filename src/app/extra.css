@@ -684,3 +684,21 @@
 }
 @media screen and (max-width: 900px) { .sched-grid { grid-template-columns: 1fr 1fr; } }
 @media screen and (max-width: 600px) { .sched-card { padding: 12px; } .sched-grid { grid-template-columns: 1fr; } }
+
+/* ตารางงานของฉัน: มือถือแสดงเป็นการ์ด (ตารางเต็มใช้เฉพาะจอใหญ่และตอนพิมพ์) */
+.sched-cards { display: none; }
+@media screen and (max-width: 700px) {
+  .sched-cards { display: flex; flex-direction: column; gap: 10px; }
+  .sheet { padding: 12px; background: transparent; border: 0; box-shadow: none; }
+  .sheet-title, .sheet-table-wrap, .sign-row, .print-footer { display: none; }
+  .sheet-meta { grid-template-columns: 1fr; font-size: 13px; gap: 2px; margin: 0 0 12px; padding: 10px 12px; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
+  .sc-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px 12px; box-shadow: 0 1px 2px rgba(42,20,80,.04); }
+  .sc-card.row-dim { opacity: .5; }
+  .sc-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .sc-no { font-size: 12px; font-weight: 700; color: var(--muted); background: var(--bg); padding: 2px 8px; border-radius: 8px; }
+  .sc-pick { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); min-height: 36px; }
+  .sc-body { display: flex; flex-direction: column; gap: 4px; width: 100%; padding: 0; border: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+  .sc-title { font-size: 15.5px; line-height: 1.4; }
+  .sc-line { font-size: 13px; line-height: 1.5; color: var(--deep); overflow-wrap: anywhere; }
+  .sc-more { margin-top: 4px; font-size: 13px; font-weight: 700; color: var(--brand); }
+}
