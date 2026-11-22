@@ -191,6 +191,33 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
             <div><b>พิมพ์เมื่อ:</b> {fmtDate(new Date().toISOString())} {fmtTime(new Date().toISOString())} น.</div>
           </div>
 
+          <div className="sched-cards no-print">
+            {shown.length === 0 && <p className="muted" style={{ textAlign: "center", padding: 20 }}>ไม่มีแผนงานในช่วงเวลานี้</p>}
+            {shown.map(({ plan, no }) => {
+              const team = (plan.work_plan_members ?? []).map(m => m.employee?.full_name).filter(Boolean).join(", ");
+              const sameDay = fmtDate(plan.start_at) === fmtDate(plan.end_at);
+              const ap = approvalOf(plan);
+              return (
+                <article key={plan.id} className={`sc-card${anyPicked && !picked.includes(plan.id) ? " row-dim" : ""}`}>
+                  <div className="sc-top">
+                    <span className="sc-no">{String(no).padStart(3, "0")}</span>
+                    <span className="badge" style={{ margin: 0, background: ap.bg, color: ap.fg }}>{ap.label}</span>
+                    <label className="sc-pick"><input type="checkbox" className="pick-box" checked={picked.includes(plan.id)} onChange={() => togglePick(plan.id)} />พิมพ์</label>
+                  </div>
+                  <button type="button" className="sc-body" onClick={() => setSelected(plan)}>
+                    <b className="sc-title">{plan.title}</b>
+                    <span className="sc-line">🗓 {sameDay
+                      ? `${fmtDate(plan.start_at)} · ${fmtTime(plan.start_at)}–${fmtTime(plan.end_at)} น.`
+                      : `${fmtDate(plan.start_at)} ${fmtTime(plan.start_at)} – ${fmtDate(plan.end_at)} ${fmtTime(plan.end_at)} น.`}</span>
+                    {plan.location && <span className="sc-line">📍 {plan.location}</span>}
+                    <span className="sc-line">👤 {plan.controller?.full_name ?? "-"}{team ? ` · ทีม: ${team}` : ""}</span>
+                    <span className="sc-more">ดูรายละเอียด ›</span>
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+
           <div className="sheet-table-wrap">
             <table className="sheet-table">
               <thead>
