@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { PersonPicker } from "@/components/ui/PersonPicker";
 import { APPROVALS, PLAN_SELECT, WORK_TYPES, byEmployeeCode, canViewAll, fmtDate, fmtTime, isPastPlan } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
 import type { WorkPlan } from "@/types/plan";
@@ -41,7 +42,7 @@ export function Dashboard({ profile }: { profile: EmployeeProfile }) {
 
   useEffect(() => {
     if (!viewAll) return;
-    void supabase.from("employees").select("id, employee_code, full_name, role, active")
+    void supabase.from("employees").select("id, employee_code, full_name, role, active, position")
       .eq("active", true).then(({ data }) => { if (data) setPeople(byEmployeeCode(data as EmployeeProfile[])); });
   }, [supabase, viewAll]);
 
@@ -141,11 +142,11 @@ export function Dashboard({ profile }: { profile: EmployeeProfile }) {
         </div>
         <div className="head-actions">
           {viewAll && (
-            <select className="db-select" aria-label="เลือกพนักงาน" value={who} onChange={e => setWho(e.target.value)}>
-              <option value="all">ทุกคน</option>
-              <option value={profile.id}>{profile.full_name} (ฉัน)</option>
-              {people.filter(p => p.id !== profile.id).map(p => <option key={p.id} value={p.id}>{p.full_name} ({p.employee_code})</option>)}
-            </select>
+            <PersonPicker className="db-select" ariaLabel="เลือกพนักงาน" value={who} onChange={setWho} options={[
+              { value: "all", label: "ทุกคน", sub: "ภาพรวมทั้งทีม", pinned: true },
+              { value: profile.id, label: profile.full_name, sub: `${profile.employee_code} · ฉัน`, pinned: true },
+              ...people.filter(p => p.id !== profile.id).map(p => ({ value: p.id, label: p.full_name, sub: `${p.employee_code}${p.position ? ` · ${p.position}` : ""}` }))
+            ]} />
           )}
           <div className="seg" role="group" aria-label="ช่วงเวลา">
             {PERIODS.map(p => <button key={p.value} type="button" aria-pressed={period === p.value} onClick={() => setPeriod(p.value)}>{p.label}</button>)}
