@@ -113,59 +113,67 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
         </div>
       </div>
 
-      <div className="sched-controls no-print">
-        <div className="field">
-          <label htmlFor="sc-emp">พนักงาน</label>
-          {viewAll ? (
-            <select id="sc-emp" value={empId} onChange={e => setEmpId(e.target.value)}>
-              <option value={profile.id}>{profile.full_name} (ฉัน)</option>
-              {profile.role === "admin" && <option value="all">ทุกคน (ทั้งทีม)</option>}
-              {people.filter(p => p.id !== profile.id).map(p => <option key={p.id} value={p.id}>{p.full_name} ({p.employee_code})</option>)}
-            </select>
-          ) : (
-            <input id="sc-emp" readOnly value={`${profile.full_name} (${profile.employee_code})`} />
-          )}
-        </div>
-        <div className="field">
-          <label htmlFor="sc-month">เดือน</label>
-          <input id="sc-month" type="month" value={month} disabled={allMonths}
-            onChange={e => setMonth(e.target.value)} />
-        </div>
-        <label className="check-inline">
-          <input type="checkbox" checked={allMonths} onChange={e => setAllMonths(e.target.checked)} />
-          แสดงทุกเดือน
-        </label>
-        <label className="check-inline">
-          <input type="checkbox" checked={approvedOnly} onChange={e => setApprovedOnly(e.target.checked)} />
-          เฉพาะที่อนุมัติแล้ว
-        </label>
-        <div className="field range-field">
-          <label>แสดงเฉพาะรายการที่</label>
-          <div className="range-row">
-            <input type="number" min={1} inputMode="numeric" placeholder="เริ่ม" aria-label="จากรายการที่" value={rangeFrom} onChange={e => setRangeFrom(e.target.value)} />
-            <span>ถึง</span>
-            <input type="number" min={1} inputMode="numeric" placeholder="สุดท้าย" aria-label="ถึงรายการที่" value={rangeTo} onChange={e => setRangeTo(e.target.value)} />
-            {rangeActive && <button type="button" className="link-btn" onClick={() => { setRangeFrom(""); setRangeTo(""); }}>ล้าง</button>}
+      <section className="sched-card no-print" aria-label="ตัวเลือกตารางงาน">
+        <div className="sched-grid">
+          <div className="field">
+            <label htmlFor="sc-emp">พนักงาน</label>
+            {viewAll ? (
+              <select id="sc-emp" value={empId} onChange={e => setEmpId(e.target.value)}>
+                <option value={profile.id}>{profile.full_name} (ฉัน)</option>
+                {profile.role === "admin" && <option value="all">ทุกคน (ทั้งทีม)</option>}
+                {people.filter(p => p.id !== profile.id).map(p => <option key={p.id} value={p.id}>{p.full_name} ({p.employee_code})</option>)}
+              </select>
+            ) : (
+              <input id="sc-emp" readOnly value={`${profile.full_name} (${profile.employee_code})`} />
+            )}
+          </div>
+          <div className="field">
+            <label htmlFor="sc-month">เดือน</label>
+            <input id="sc-month" type="month" value={month} disabled={allMonths}
+              onChange={e => setMonth(e.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="sc-from">รายการที่ (ลำดับ)</label>
+            <div className="range-row">
+              <input id="sc-from" type="number" min={1} inputMode="numeric" placeholder="เริ่ม" aria-label="จากรายการที่" value={rangeFrom} onChange={e => setRangeFrom(e.target.value)} />
+              <span>ถึง</span>
+              <input type="number" min={1} inputMode="numeric" placeholder="สุดท้าย" aria-label="ถึงรายการที่" value={rangeTo} onChange={e => setRangeTo(e.target.value)} />
+              {rangeActive && <button type="button" className="link-btn" onClick={() => { setRangeFrom(""); setRangeTo(""); }}>ล้าง</button>}
+            </div>
           </div>
         </div>
-        <div className="sched-actions">
-          <button className="btn secondary" onClick={printSheet}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M7 14h10v7H7z" /></svg>
-            พิมพ์
-          </button>
-          <button className="btn" onClick={exportPdf}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14" /></svg>
-            ส่งออก PDF
-          </button>
+
+        <div className="sched-bar">
+          <div className="sched-chips">
+            <label className={`toggle-chip${allMonths ? " on" : ""}`}>
+              <input type="checkbox" checked={allMonths} onChange={e => setAllMonths(e.target.checked)} />
+              <span>แสดงทุกเดือน</span>
+            </label>
+            <label className={`toggle-chip${approvedOnly ? " on" : ""}`}>
+              <input type="checkbox" checked={approvedOnly} onChange={e => setApprovedOnly(e.target.checked)} />
+              <span>เฉพาะที่อนุมัติแล้ว</span>
+            </label>
+            <span className="sched-count">{printCount} รายการ{anyPicked ? ` · ติ๊กพิมพ์ไว้ ${printCount}` : ""}
+              {anyPicked && <button type="button" className="link-btn" onClick={() => setPicked([])}>ล้างที่ติ๊ก</button>}
+            </span>
+          </div>
+          <div className="sched-actions">
+            <button className="btn secondary" onClick={printSheet}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M7 14h10v7H7z" /></svg>
+              พิมพ์
+            </button>
+            <button className="btn" onClick={exportPdf}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14" /></svg>
+              ส่งออก PDF
+            </button>
+          </div>
         </div>
-      </div>
-      <ul className="hint-list no-print">
-        <li>ส่งออก PDF: ในหน้าต่างพิมพ์ที่เปิดขึ้น ให้เลือกเครื่องพิมพ์เป็น “บันทึกเป็น PDF” (Save as PDF)</li>
-        <li>
-          เลือกพิมพ์เฉพาะบางรายการ: ใส่ช่วงเลขลำดับด้านบน หรือติ๊กช่อง “พิมพ์” ท้ายแถว (ไม่ติ๊กเลย = พิมพ์ทั้งหมดที่แสดง)
-          {anyPicked && <> · ติ๊กไว้ {printCount} รายการ <button type="button" className="link-btn" onClick={() => setPicked([])}>ล้างที่ติ๊ก</button></>}
-        </li>
-      </ul>
+
+        <p className="sched-tip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
+          <span>ส่งออก PDF: เลือกเครื่องพิมพ์เป็น &ldquo;บันทึกเป็น PDF&rdquo; ในหน้าต่างพิมพ์ · พิมพ์เฉพาะบางรายการ: ใส่ช่วงลำดับ หรือติ๊กช่อง &ldquo;พิมพ์&rdquo; ท้ายแถว (ไม่ติ๊ก = พิมพ์ทั้งหมดที่แสดง)</span>
+        </p>
+      </section>
 
       {error && <p className="error no-print" role="alert">{error}</p>}
 
