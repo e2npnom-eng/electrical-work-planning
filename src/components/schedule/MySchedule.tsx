@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PlanDetail } from "@/components/plans/PlanDetail";
+import { PersonPicker } from "@/components/ui/PersonPicker";
 import { PLAN_SELECT, approvalOf, byEmployeeCode, canViewAll, fmtDate, fmtTime } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
 import type { WorkPlan } from "@/types/plan";
@@ -27,7 +28,7 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
 
   useEffect(() => {
     if (!viewAll) return;
-    void supabase.from("employees").select("id, employee_code, full_name, role, active")
+    void supabase.from("employees").select("id, employee_code, full_name, role, active, position")
       .eq("active", true).order("full_name")
       .then(({ data }) => { if (data) setPeople(byEmployeeCode(data as EmployeeProfile[])); });
   }, [supabase, viewAll]);
@@ -118,11 +119,11 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
           <div className="field">
             <label htmlFor="sc-emp">พนักงาน</label>
             {viewAll ? (
-              <select id="sc-emp" value={empId} onChange={e => setEmpId(e.target.value)}>
-                <option value={profile.id}>{profile.full_name} (ฉัน)</option>
-                {profile.role === "admin" && <option value="all">ทุกคน (ทั้งทีม)</option>}
-                {people.filter(p => p.id !== profile.id).map(p => <option key={p.id} value={p.id}>{p.full_name} ({p.employee_code})</option>)}
-              </select>
+              <PersonPicker id="sc-emp" ariaLabel="เลือกพนักงาน" value={empId} onChange={setEmpId} options={[
+                { value: profile.id, label: profile.full_name, sub: `${profile.employee_code} · ฉัน`, pinned: true },
+                ...(profile.role === "admin" ? [{ value: "all", label: "ทุกคน (ทั้งทีม)", sub: "ดูตารางงานรวมทั้งทีม", pinned: true }] : []),
+                ...people.filter(p => p.id !== profile.id).map(p => ({ value: p.id, label: p.full_name, sub: `${p.employee_code}${p.position ? ` · ${p.position}` : ""}` }))
+              ]} />
             ) : (
               <input id="sc-emp" readOnly value={`${profile.full_name} (${profile.employee_code})`} />
             )}
