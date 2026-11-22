@@ -6,4 +6,5 @@ export type EmployeeProfile = {
   full_name: string;
   role: Role;
   active?: boolean;
+  position?: string | null;
 };
