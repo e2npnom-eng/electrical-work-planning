@@ -32,6 +32,18 @@ type Props = {
   busy?: boolean; actionError?: string;
 };
 
+// แสดงข้อความตามที่พิมพ์ (ขึ้นบรรทัดใหม่ตามที่กด Enter) และทำลิงก์ http/https ให้กดได้
+function Linkified({ text }: { text: string }) {
+  const parts = text.split(/(https?:\/\/[^\s<>"']+)/g);
+  return <>{parts.map((part, i) => {
+    if (i % 2 === 0) return <span key={i}>{part}</span>;
+    const m = part.match(/^(.*?)([).,;:!?\]]*)$/);
+    const url = m ? m[1] : part;
+    const tail = m ? m[2] : "";
+    return <span key={i}><a href={url} target="_blank" rel="noopener noreferrer" className="auto-link">{url}</a>{tail}</span>;
+  })}</>;
+}
+
 export function PlanDetail({
   plan, profile, canEdit, canDelete, onClose, onEdit, onDelete,
   onCopy, onCopyLink, onSubmit, onApprove, onReturn, busy, actionError,
@@ -137,7 +149,7 @@ export function PlanDetail({
         </div>
         <div>
           <div className="muted" style={{ marginBottom: 6 }}>รายละเอียด</div>
-          <p style={{ margin: 0, lineHeight: 1.7, maxWidth: "62ch" }}>{plan.description || "-"}</p>
+          <p className="detail-text">{plan.description ? <Linkified text={plan.description} /> : "-"}</p>
         </div>
 
         <div className="history">
