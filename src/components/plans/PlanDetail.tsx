@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { approvalOf, expiryLabel, expiryOf, fmtDateTime, isPastPlan, typeIcon, typeLabel } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
-import type { WorkPlan } from "@/types/plan";
+import type { WorkPlan, WorkResult } from "@/types/plan";
+import { ResultSection } from "./ResultSection";
 
 type Log = {
   id: number; action: string; actor_name: string | null;
@@ -25,6 +26,7 @@ const FIELD_LABELS: Record<string, string> = {
 type Props = {
   plan: WorkPlan; profile: EmployeeProfile; canEdit: boolean; canDelete: boolean;
   onClose: () => void; onEdit: () => void; onDelete: () => void;
+  onResultSaved?: (r: WorkResult) => void;
   onCopy?: () => void; onCopyLink?: () => void;
   onSubmit?: () => void; onApprove?: () => void; onReturn?: (note: string) => void;
   onCancelRequest?: (reason: string) => void; onCancelWithdraw?: () => void;
@@ -46,10 +48,11 @@ function Linkified({ text }: { text: string }) {
 
 export function PlanDetail({
   plan, profile, canEdit, canDelete, onClose, onEdit, onDelete,
-  onCopy, onCopyLink, onSubmit, onApprove, onReturn, busy, actionError,
+  onCopy, onCopyLink, onResultSaved, onSubmit, onApprove, onReturn, busy, actionError,
   onCancelRequest, onCancelWithdraw, onCancelApprove, onCancelReject, onCancelNow
 }: Props) {
   const supabase = useMemo(() => createClient(), []);
+  const [localResult, setLocalResult] = useState<WorkResult | null>(null);
   const [returning, setReturning] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -151,6 +154,10 @@ export function PlanDetail({
           <div className="muted" style={{ marginBottom: 6 }}>รายละเอียด</div>
           <p className="detail-text">{plan.description ? <Linkified text={plan.description} /> : "-"}</p>
         </div>
+
+        <ResultSection key={(plan.work_result?.recorded_at ?? "") + (localResult?.recorded_at ?? "")}
+          plan={localResult ? { ...plan, work_result: localResult } : plan} profile={profile} supabase={supabase}
+          onSaved={r => { setLocalResult(r); onResultSaved?.(r); }} />
 
         <div className="history">
           <button type="button" className="link-btn" onClick={() => void toggleLogs()}>
