@@ -52,11 +52,11 @@ export const isMine = (p: WorkPlan, id: string) =>
   p.controller_id === id || p.created_by === id || (p.work_plan_members ?? []).some(m => m.employee_id === id);
 
 export const fmtDateTime = (v: string) =>
-  new Date(v).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" });
+  new Date(v).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" });
 export const fmtDate = (v: string) =>
   new Date(v).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
 export const fmtTime = (v: string) =>
-  new Date(v).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+  new Date(v).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
 export function localDateTime(value?: string | null) {
   if (!value) return "";
