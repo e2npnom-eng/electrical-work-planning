@@ -1253,3 +1253,17 @@
   .result-box textarea { min-height: 72px; }
 }
 @media print { .result-box { display: none; } }
+
+/* ===== แผนดับไฟ ===== */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media screen {
+  .outage-box { margin: 4px 0 16px; padding: 12px 14px; border: 1px dashed #cfc6e3; border-radius: 14px; background: #fff; min-width: 0; }
+  .outage-box.on { border-style: solid; border-color: #f5a623; background: #fffaf0; }
+  .outage-toggle { display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer; min-height: 32px; }
+  .outage-toggle input { width: 20px; height: 20px; flex: none; }
+  .outage-fields { margin-top: 12px; }
+  .outage-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0 12px; }
+  .outage-view { margin: 20px 0 0; padding: 14px 16px; border: 1px solid #f3d38a; border-radius: 14px; background: #fffaf0; }
+  .outage-view-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .outage-view .facts { margin-bottom: 0; }
+}
