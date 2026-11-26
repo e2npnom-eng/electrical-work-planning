@@ -104,5 +104,11 @@ export function expiryOf(p: Pick<WorkPlan, "end_at" | "status" | "approval_statu
 export const expiryLabel = (k: Expiry) => (k === "over" ? "❗ ผ่านวันแล้ว" : k === "today" ? "⏰ หมดเวลาวันนี้" : "⏰ เหลือ 1 วัน");
 
 export function byEmployeeCode<T extends { employee_code: string }>(list: T[]): T[] {
-  return [...list].sort((a, b) => a.employee_code.length - b.employee_code.length || a.employee_code.localeCompare(b.employee_code));
+  // รหัสตัวเลข (พนักงาน) เรียงน้อยไปมากก่อน แล้วตามด้วยรหัสอื่น เช่น ทีมงาน (TEAM01…) ไว้ล่างสุด
+  const isNum = (c: string) => /^\d+$/.test(c);
+  return [...list].sort((a, b) => {
+    const an = isNum(a.employee_code), bn = isNum(b.employee_code);
+    if (an !== bn) return an ? -1 : 1;
+    return a.employee_code.length - b.employee_code.length || a.employee_code.localeCompare(b.employee_code);
+  });
 }
