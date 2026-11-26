@@ -407,7 +407,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
             initialView={isMobile ? "listMonth" : "dayGridMonth"}
             headerToolbar={{ left: "prev,next today", center: "title", right: isMobile ? "dayGridMonth,listMonth" : "dayGridMonth,timeGridWeek,listMonth" }}
             buttonText={{ today: "วันนี้", month: "เดือน", week: "สัปดาห์", day: "วัน", list: "รายการ" }}
-            locale={thLocale} height="auto" events={events} eventClick={onEventClick} dateClick={onDateClick}
+            locale={thLocale} height="auto" eventTimeFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }} slotLabelFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }} events={events} eventClick={onEventClick} dateClick={onDateClick}
             eventDidMount={arg => { if (arg.event.extendedProps.past) arg.el.style.boxShadow = `inset 4px 0 0 ${arg.event.borderColor}`; arg.el.title = `${arg.event.title}\n${String(arg.event.extendedProps.who ?? "")}`; }} datesSet={onDatesSet} eventOrder={(x, y) => String((x as { extendedProps?: { created?: string } }).extendedProps?.created ?? "").localeCompare(String((y as { extendedProps?: { created?: string } }).extendedProps?.created ?? ""))} dayMaxEvents={3} nowIndicator editable={false} />
         </div>
         <div className="legend">
