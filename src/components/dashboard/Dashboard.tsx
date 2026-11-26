@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PersonPicker } from "@/components/ui/PersonPicker";
-import { APPROVALS, PLAN_SELECT, WORK_TYPES, byEmployeeCode, canViewAll, fmtDate, fmtTime, isPastPlan } from "@/lib/plan-meta";
+import { APPROVALS, PLAN_SELECT, WORK_TYPES, byEmployeeCode, canViewAll, fmtDate, fmtTime, isPastPlan, needsResult } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
 import type { WorkPlan } from "@/types/plan";
 
@@ -74,6 +74,7 @@ export function Dashboard({ profile }: { profile: EmployeeProfile }) {
     const act = all.filter(p => p.status !== "cancelled");
     const cnt = (k: string) => act.filter(p => p.approval_status === k).length;
     const overdue = act.filter(p => p.approval_status !== "approved" && isPastPlan(p)).length;
+    const noResult = act.filter(needsResult).length;
 
     // แนวโน้ม
     const n = bucket === "day" ? Math.round((to.getTime() - from.getTime()) / 86400000) : (to.getFullYear() - from.getFullYear()) * 12 + to.getMonth() - from.getMonth();
@@ -107,7 +108,7 @@ export function Dashboard({ profile }: { profile: EmployeeProfile }) {
     const ranking = [...pmap.values()].sort((a, b) => b.value - a.value).slice(0, 10);
     return {
       total: act.length, approved: cnt("approved"), pending: cnt("pending"), returned: cnt("returned"), draft: cnt("draft"),
-      cancelled: cancelled.length, overdue, trend, types, vehicles, ranking
+      cancelled: cancelled.length, overdue, noResult, trend, types, vehicles, ranking
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plans, personId, from, to, bucket]);
@@ -162,6 +163,7 @@ export function Dashboard({ profile }: { profile: EmployeeProfile }) {
         <Kpi label="รออนุมัติ" value={d.pending} hint={d.pending ? "รอผู้ดูแลระบบ" : "ไม่มีรายการค้าง"} color={APPROVALS.pending.solid} />
         <Kpi label="ส่งกลับแก้ไข" value={d.returned} hint={d.returned ? "ต้องแก้ไขแล้วส่งใหม่" : "-"} color={APPROVALS.returned.solid} />
         <Kpi label="ยกเลิก" value={d.cancelled} hint="ไม่นับในแผนงานทั้งหมด" color={CANCEL_COLOR} />
+        <Kpi label="รอบันทึกผล" value={d.noResult} hint={d.noResult ? "งานเสร็จแล้วยังไม่บันทึกผล" : "บันทึกครบแล้ว"} color={d.noResult ? "#B7791F" : "#7C7491"} />
         <Kpi label="ผ่านวันแล้วยังไม่อนุมัติ" value={d.overdue} hint={d.overdue ? "❗ ควรติดตาม" : "ไม่มี"} color={d.overdue ? "#B42318" : "#7C7491"} />
       </section>
 
