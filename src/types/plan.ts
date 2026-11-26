@@ -32,6 +32,7 @@ export type WorkPlan = {
   approver?: PersonRef | null;
   cancel_requester?: PersonRef | null;
   work_plan_vehicles?: { vehicle_id: string; vehicle?: Vehicle | null }[];
+  outage?: OutagePlan | null;
   work_result?: WorkResult | null;
   work_plan_members?: { employee_id: string; employee?: PersonRef | null }[];
 };
@@ -46,6 +47,17 @@ export type WorkResult = {
   recorded_by: string | null;
   recorded_at: string;
   recorder?: PersonRef | null;
+};
+
+export type OutagePlan = {
+  plan_id: string;
+  feeder: string | null;
+  area: string;
+  customers: number | null;
+  outage_start: string;
+  outage_end: string;
+  notified: boolean;
+  note: string | null;
 };
 
 export type Conflict = {
