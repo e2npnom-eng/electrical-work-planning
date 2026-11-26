@@ -7,6 +7,7 @@ export const PLAN_SELECT =
   "approver:employees!work_plans_approved_by_fkey(id, full_name, employee_code), " +
   "cancel_requester:employees!work_plans_cancel_requested_by_fkey(id, full_name, employee_code), " +
   "work_result:work_results(*, recorder:employees!work_results_recorded_by_fkey(id, full_name, employee_code)), " +
+  "outage:outage_plans(*), " +
   "work_plan_members(employee_id, employee:employees(id, full_name, employee_code)), " +
   "work_plan_vehicles(vehicle_id, vehicle:vehicles(id, code, plate))";
 
