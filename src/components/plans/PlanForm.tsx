@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PersonPicker } from "@/components/ui/PersonPicker";
+import { DateTime24 } from "@/components/ui/DateTime24";
 import {
   APPROVALS, WORK_TYPES, fmtDateTime, localDateTime, shiftDate
 } from "@/lib/plan-meta";
@@ -259,9 +260,9 @@ export function PlanForm({ profile, employees, vehicles, plan, prefill, onClose,
             <div className="field"><label htmlFor="pf-loc">สถานที่ปฏิบัติงาน *</label>
               <input id="pf-loc" required value={location} onChange={e => setLocation(e.target.value)} /></div>
             <div className="field"><label htmlFor="pf-start">วันเวลาเริ่มต้น *</label>
-              <input id="pf-start" required type="datetime-local" value={startAt} onChange={e => setStartAt(e.target.value)} /></div>
+              <DateTime24 id="pf-start" required value={startAt} onChange={setStartAt} /></div>
             <div className="field"><label htmlFor="pf-end">วันเวลาสิ้นสุด *</label>
-              <input id="pf-end" required type="datetime-local" value={endAt} onChange={e => setEndAt(e.target.value)} /></div>
+              <DateTime24 id="pf-end" required value={endAt} onChange={setEndAt} /></div>
           </div>
 
           {conflicts.length > 0 && (
