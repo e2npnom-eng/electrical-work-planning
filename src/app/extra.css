@@ -805,3 +805,6 @@
   .pp-opt { padding: 10px; }
 }
 .db-select.pp { padding: 0; border: 0; background: none; min-height: 0; }
+/* ตัวเลือกในฟอร์มเพิ่มแผนงาน ให้สูงเท่าช่องกรอกอื่น */
+.pf-picker .pp-btn { min-height: 48px; font-size: 16px; border-radius: 12px; border-color: var(--line, #d8d0e6); }
+.pf-picker .pp-pop { width: 100%; }
