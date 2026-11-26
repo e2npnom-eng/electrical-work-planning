@@ -23,16 +23,24 @@ export function EmployeeTable({ initial, meId }: { initial: Row[]; meId: string 
   const [savingId, setSavingId] = useState("");
   const [movedId, setMovedId] = useState("");
   const [adding, setAdding] = useState(false);
-  const [confirmId, setConfirmId] = useState("");
+  const [confirm, setConfirm] = useState<{ id: string; kind: "del" | "reset" } | null>(null);
   const [notice, setNotice] = useState("");
 
   async function remove(r: Row) {
     setError(""); setSavingId(r.id);
     const { error: e } = await supabase.rpc("admin_delete_employee", { p_id: r.id });
-    setSavingId(""); setConfirmId("");
+    setSavingId(""); setConfirm(null);
     if (e) { setError(e.message); return; }
     setRows(cur => cur.filter(x => x.id !== r.id));
     setNotice(`ลบ ${r.full_name} แล้ว`);
+  }
+
+  async function resetPassword(r: Row) {
+    setError(""); setNotice(""); setSavingId(r.id);
+    const { error: e } = await supabase.rpc("admin_reset_password", { p_id: r.id });
+    setSavingId(""); setConfirm(null);
+    if (e) { setError(e.message); return; }
+    setNotice(`รีเซ็ตรหัสผ่านของ ${r.full_name} แล้ว · รหัสผ่านใหม่คือรหัสพนักงาน ${r.employee_code} (ให้เจ้าตัวเข้าสู่ระบบแล้วเปลี่ยนรหัสผ่านทันที)`);
   }
 
   async function patch(id: string, change: Partial<Pick<Row, "role" | "active">>) {
@@ -97,22 +105,32 @@ export function EmployeeTable({ initial, meId }: { initial: Row[]; meId: string 
                           {COLUMNS.map(c => <option key={c.role} value={c.role}>{ROLE_LABELS[c.role]}</option>)}
                         </select>
                       </label>
-                      {confirmId === r.id ? (
-                        <span className="del-confirm" role="alert">
-                          ลบ {r.full_name}?
-                          <button type="button" className="del-yes" disabled={busy} onClick={() => void remove(r)}>ยืนยันลบ</button>
-                          <button type="button" className="del-no" disabled={busy} onClick={() => setConfirmId("")}>ยกเลิก</button>
-                        </span>
-                      ) : (
-                        <button type="button" className="del-btn" disabled={isMe || busy} aria-label={`ลบ ${r.full_name}`}
-                          title={isMe ? "ไม่สามารถลบบัญชีของตัวเองได้" : "ลบรายชื่อ"} onClick={() => setConfirmId(r.id)}>🗑 ลบ</button>
-                      )}
                       <button type="button" className={`active-switch${r.active ? " on" : ""}`} disabled={isMe || busy}
                         role="switch" aria-checked={r.active} aria-label={`เปิดใช้งานบัญชี ${r.full_name}`}
                         title={r.active ? "ใช้งานอยู่ (กดเพื่อปิดบัญชี)" : "ปิดใช้งาน (กดเพื่อเปิด)"}
                         onClick={() => void patch(r.id, { active: !r.active })}>
                         <i /><span>{r.active ? "ใช้งาน" : "ปิด"}</span>
                       </button>
+                    </div>
+                    <div className="role-card-foot">
+                      {confirm?.id === r.id ? (
+                        <span className={`del-confirm${confirm.kind === "reset" ? " is-reset" : ""}`} role="alert">
+                          {confirm.kind === "del" ? `ลบ ${r.full_name}?` : `รีเซ็ตรหัสผ่านเป็น ${r.employee_code}?`}
+                          <button type="button" className="del-yes" disabled={busy}
+                            onClick={() => void (confirm.kind === "del" ? remove(r) : resetPassword(r))}>
+                            {confirm.kind === "del" ? "ยืนยันลบ" : "ยืนยันรีเซ็ต"}
+                          </button>
+                          <button type="button" className="del-no" disabled={busy} onClick={() => setConfirm(null)}>ยกเลิก</button>
+                        </span>
+                      ) : (
+                        <>
+                          <button type="button" className="reset-btn" disabled={isMe || busy}
+                            title={isMe ? "รีเซ็ตรหัสผ่านของตัวเองไม่ได้ (ใช้เมนูเปลี่ยนรหัสผ่าน)" : "รีเซ็ตรหัสผ่านเป็นรหัสพนักงาน"}
+                            onClick={() => setConfirm({ id: r.id, kind: "reset" })}>🔑 รีเซ็ตรหัสผ่าน</button>
+                          <button type="button" className="del-btn" disabled={isMe || busy} aria-label={`ลบ ${r.full_name}`}
+                            title={isMe ? "ไม่สามารถลบบัญชีของตัวเองได้" : "ลบรายชื่อ"} onClick={() => setConfirm({ id: r.id, kind: "del" })}>🗑 ลบ</button>
+                        </>
+                      )}
                     </div>
                   </article>
                 );
