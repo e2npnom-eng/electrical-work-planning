@@ -145,7 +145,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
     void loadSide();
     void supabase.from("vehicles").select("id, code, plate, sort_order, active").eq("active", true).order("sort_order")
       .then(({ data }) => { if (data) setVehicles(data as Vehicle[]); });
-    void supabase.from("employees").select("id, employee_code, full_name, role, active")
+    void supabase.from("employees").select("id, employee_code, full_name, role, active, position")
       .eq("active", true).order("full_name")
       .then(({ data }) => { if (data) setEmployees(byEmployeeCode(data as EmployeeProfile[])); });
   }, [supabase, loadSide]);
