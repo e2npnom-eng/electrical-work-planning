@@ -17,6 +17,7 @@ export function PlanItem({ plan, showWho, onOpen, no }: { plan: WorkPlan; showWh
         {(plan.work_plan_vehicles?.length ?? 0) > 0 && <small>🚗 {plan.work_plan_vehicles!.map(v => v.vehicle?.code).filter(Boolean).join(", ")}</small>}
       </span>
       <span className="badges">
+        {plan.outage && <span className="mini-badge" style={{ background: "#2A1450", color: "#FFD27A" }}>⚡ ดับไฟ</span>}
         {needsResult(plan) && <span className="mini-badge" style={{ background: "#FCEFC4", color: "#6B4200" }}>📝 รอบันทึกผล</span>}
         {expiryOf(plan) && <span className={`mini-badge expiry-badge expiry-${expiryOf(plan)}`}>{expiryLabel(expiryOf(plan)!)}</span>}
       <span className="mini-badge" style={asking ? { background: "#F8D7D2", color: "#7A1D12" } : { background: ap.bg, color: ap.fg }}>{asking ? "ขอยกเลิก" : ap.label}</span>
