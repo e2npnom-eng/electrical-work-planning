@@ -6,6 +6,7 @@ export const PLAN_SELECT =
   "creator:employees!work_plans_created_by_fkey(id, full_name, employee_code), " +
   "approver:employees!work_plans_approved_by_fkey(id, full_name, employee_code), " +
   "cancel_requester:employees!work_plans_cancel_requested_by_fkey(id, full_name, employee_code), " +
+  "work_result:work_results(*, recorder:employees!work_results_recorded_by_fkey(id, full_name, employee_code)), " +
   "work_plan_members(employee_id, employee:employees(id, full_name, employee_code)), " +
   "work_plan_vehicles(vehicle_id, vehicle:vehicles(id, code, plate))";
 
@@ -44,6 +45,17 @@ export const approvalOf = (p: Pick<WorkPlan, "approval_status">) => APPROVALS[p.
 
 export const startOfToday = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
 /** งานผ่านวันไปแล้ว = วันสิ้นสุดอยู่ก่อนวันนี้ */
+export const RESULT_OUTCOMES = [
+  { value: "completed", label: "เสร็จสมบูรณ์", icon: "✅" },
+  { value: "partial", label: "เสร็จบางส่วน", icon: "🟡" },
+  { value: "not_done", label: "ไม่ได้ดำเนินการ", icon: "⛔" }
+] as const;
+
+// อนุมัติแล้ว + ผ่านวันเริ่มงานแล้ว + ไม่ถูกยกเลิก + ยังไม่มีบันทึกผล
+export const needsResult = (p: WorkPlan) =>
+  p.approval_status === "approved" && p.status !== "cancelled" && !p.work_result &&
+  new Date(p.start_at).getTime() < Date.now();
+
 export const isPastPlan = (p: Pick<WorkPlan, "end_at">) => new Date(p.end_at).getTime() < startOfToday().getTime();
 
 export const canViewAll = (role: Role) => role === "admin" || role === "executive";
