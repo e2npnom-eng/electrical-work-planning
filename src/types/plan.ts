@@ -32,7 +32,20 @@ export type WorkPlan = {
   approver?: PersonRef | null;
   cancel_requester?: PersonRef | null;
   work_plan_vehicles?: { vehicle_id: string; vehicle?: Vehicle | null }[];
+  work_result?: WorkResult | null;
   work_plan_members?: { employee_id: string; employee?: PersonRef | null }[];
+};
+
+export type WorkResult = {
+  plan_id: string;
+  outcome: "completed" | "partial" | "not_done";
+  summary: string | null;
+  actual_start: string | null;
+  actual_end: string | null;
+  issues: string | null;
+  recorded_by: string | null;
+  recorded_at: string;
+  recorder?: PersonRef | null;
 };
 
 export type Conflict = {
