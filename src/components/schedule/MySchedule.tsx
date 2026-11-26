@@ -281,6 +281,7 @@ export function MySchedule({ profile }: { profile: EmployeeProfile }) {
 
       {selected && <PlanDetail plan={selected} profile={profile}
         canEdit={false} canDelete={false}
+        onResultSaved={r => setSelected(prev => prev ? { ...prev, work_result: r } : prev)}
         onClose={() => setSelected(null)} onEdit={() => undefined} onDelete={() => undefined} />}
     </div>
   );
