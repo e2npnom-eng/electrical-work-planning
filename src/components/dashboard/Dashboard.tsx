@@ -117,6 +117,12 @@ export function Dashboard({ profile }: { profile: EmployeeProfile }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [upcoming, personId]);
 
+  const outages = useMemo(() => upcoming.filter(p => p.outage && p.approval_status !== "draft").filter(inScope),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [upcoming, personId]);
+  const outCustomers = outages.reduce((sum, p) => sum + (p.outage?.customers ?? 0), 0);
+  const outUnnotified = outages.filter(p => !p.outage?.notified).length;
+
   const periodLabel = period === "year" ? `ปี ${thYear(from)}`
     : bucket === "month" ? `${TH_MONTH[from.getMonth()]} – ${TH_MONTH[to.getMonth() === 0 ? 11 : to.getMonth() - 1]} ${thYear(from)}`
       : `${TH_MONTH[from.getMonth()]} ${thYear(from)}`;
@@ -206,6 +212,26 @@ export function Dashboard({ profile }: { profile: EmployeeProfile }) {
           <h2>การใช้รถ</h2>
           <p className="muted db-sub">จำนวนแผนงานที่ใช้รถแต่ละคัน (สูงสุด 8 อันดับ)</p>
           <RankBars items={d.vehicles} empty="ยังไม่มีแผนงานที่เลือกใช้รถในช่วงนี้" />
+        </section>
+
+        <section className="panel db-wide-panel db-outage">
+          <h2>⚡ แผนดับไฟที่กำลังจะมาถึง</h2>
+          <p className="muted db-sub">
+            {outages.length === 0 ? "ยังไม่มีแผนดับไฟ"
+              : `${outages.length} รายการ · ผู้ใช้ไฟได้รับผลกระทบรวม ${nf(outCustomers)} ราย${outUnnotified ? ` · ยังไม่แจ้งผู้ใช้ไฟ ${outUnnotified} รายการ` : ""}`}
+          </p>
+          {outages.length > 0 && (
+            <ul className="db-upcoming">
+              {outages.slice(0, 8).map(p => (
+                <li key={p.id}>
+                  <span className="db-when"><b>{fmtDate(p.outage!.outage_start)}</b><small>{fmtTime(p.outage!.outage_start)}–{fmtTime(p.outage!.outage_end)} น.</small></span>
+                  <span className="db-what"><b>{p.outage!.area}</b><small>{p.title}{p.outage!.customers != null ? ` · ${nf(p.outage!.customers)} ราย` : ""}</small></span>
+                  <span className="badge" style={p.outage!.notified ? { margin: 0, background: "#CFEFEA", color: "#0B4F49" } : { margin: 0, background: "#FCE6BC", color: "#6B4200" }}>
+                    {p.outage!.notified ? "แจ้งแล้ว" : "ยังไม่แจ้ง"}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         {viewAll && !personId ? (
