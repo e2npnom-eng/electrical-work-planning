@@ -66,6 +66,15 @@ export function PlanForm({ profile, employees, vehicles, plan, prefill, onClose,
   const [conflicts, setConflicts] = useState<Conflict[]>([]);
   const [sameSite, setSameSite] = useState<WorkPlan[]>([]);
   const [busyIds, setBusyIds] = useState<string[]>([]);
+  const o0 = plan?.outage ?? null;
+  const [outOn, setOutOn] = useState(Boolean(o0));
+  const [outFeeder, setOutFeeder] = useState(o0?.feeder ?? "");
+  const [outArea, setOutArea] = useState(o0?.area ?? "");
+  const [outCust, setOutCust] = useState(o0?.customers != null ? String(o0.customers) : "");
+  const [outStart, setOutStart] = useState(o0 ? localDateTime(o0.outage_start) : "");
+  const [outEnd, setOutEnd] = useState(o0 ? localDateTime(o0.outage_end) : "");
+  const [outNotified, setOutNotified] = useState(o0?.notified ?? false);
+  const [outNote, setOutNote] = useState(o0?.note ?? "");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const target = useRef<ApprovalStatus | null>(null);
@@ -149,6 +158,10 @@ export function PlanForm({ profile, employees, vehicles, plan, prefill, onClose,
     setError("");
     if (!controllerId) { setError("กรุณาเลือกผู้ควบคุมงาน"); return; }
     if (new Date(endAt) <= new Date(startAt)) { setError("เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่มต้น"); return; }
+    if (outOn) {
+      if (!outArea.trim()) { setError("กรุณาระบุพื้นที่ที่ไฟดับ"); return; }
+      if (!outStart || !outEnd || new Date(outEnd) <= new Date(outStart)) { setError("เวลาไฟกลับต้องอยู่หลังเวลาดับไฟ"); return; }
+    }
     setSaving(true);
     const base = {
       title: title.trim(), controller_id: controllerId, location: location.trim(),
@@ -218,8 +231,40 @@ export function PlanForm({ profile, employees, vehicles, plan, prefill, onClose,
         }
       }
     }
+    // แผนดับไฟ (งานซ้ำ: เลื่อนเวลาดับไฟตามวันของแต่ละรอบ)
+    if (outOn) {
+      const baseStart = new Date(startAt).getTime();
+      const rows = planIds.map((id, i) => {
+        const shift = plan ? 0 : (repeat === "none" ? 0 : shiftDate(new Date(startAt), repeat, i).getTime() - baseStart);
+        return {
+          plan_id: id, feeder: outFeeder.trim() || null, area: outArea.trim(),
+          customers: outCust.trim() === "" ? null : Math.max(0, Math.round(Number(outCust)) || 0),
+          outage_start: new Date(new Date(outStart).getTime() + shift).toISOString(),
+          outage_end: new Date(new Date(outEnd).getTime() + shift).toISOString(),
+          notified: outNotified, note: outNote.trim() || null
+        };
+      });
+      const { error: oErr } = await supabase.from("outage_plans").upsert(rows, { onConflict: "plan_id" });
+      if (oErr) {
+        setSaving(false);
+        window.alert("บันทึกแผนงานแล้ว แต่บันทึกแผนดับไฟไม่สำเร็จ: " + oErr.message + "\nกรุณาเปิดแผนงานแล้วแก้ไขอีกครั้ง");
+        onSaved();
+        return;
+      }
+    } else if (plan?.outage) {
+      const { error: oErr } = await supabase.from("outage_plans").delete().eq("plan_id", plan.id);
+      if (oErr) { setSaving(false); setError(oErr.message); return; }
+    }
     setSaving(false);
     onSaved();
+  }
+
+  function toggleOutage(on: boolean) {
+    setOutOn(on);
+    if (on) {
+      if (!outStart) setOutStart(startAt);
+      if (!outEnd) setOutEnd(endAt);
+    }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -371,6 +416,36 @@ export function PlanForm({ profile, employees, vehicles, plan, prefill, onClose,
           )}
           <div className="field"><label htmlFor="pf-desc">รายละเอียดเพิ่มเติม</label>
             <textarea id="pf-desc" value={description} onChange={e => setDescription(e.target.value)} /></div>
+
+          <fieldset className={`outage-box${outOn ? " on" : ""}`}>
+            <legend className="sr-only">แผนดับไฟ</legend>
+            <label className="outage-toggle">
+              <input type="checkbox" checked={outOn} onChange={e => toggleOutage(e.target.checked)} />
+              <span>⚡ งานนี้มีการดับไฟ</span>
+            </label>
+            {outOn && (
+              <div className="outage-fields">
+                <div className="field"><label htmlFor="of-area">พื้นที่ที่ไฟดับ *</label>
+                  <input id="of-area" value={outArea} onChange={e => setOutArea(e.target.value)} placeholder="เช่น บ้านหนองแสง หมู่ 3, 5" /></div>
+                <div className="outage-row">
+                  <div className="field"><label htmlFor="of-feeder">ฟีดเดอร์ / จุดตัดไฟ</label>
+                    <input id="of-feeder" value={outFeeder} onChange={e => setOutFeeder(e.target.value)} placeholder="เช่น NPM-01" /></div>
+                  <div className="field"><label htmlFor="of-cust">ผู้ใช้ไฟที่ได้รับผลกระทบ (ราย)</label>
+                    <input id="of-cust" type="number" min={0} inputMode="numeric" value={outCust} onChange={e => setOutCust(e.target.value)} /></div>
+                </div>
+                <div className="outage-row">
+                  <div className="field"><label htmlFor="of-start">ดับไฟ</label><DateTime24 id="of-start" value={outStart} onChange={setOutStart} required /></div>
+                  <div className="field"><label htmlFor="of-end">ไฟกลับ</label><DateTime24 id="of-end" value={outEnd} onChange={setOutEnd} required /></div>
+                </div>
+                <label className="outage-toggle">
+                  <input type="checkbox" checked={outNotified} onChange={e => setOutNotified(e.target.checked)} />
+                  <span>แจ้งผู้ใช้ไฟแล้ว</span>
+                </label>
+                <div className="field"><label htmlFor="of-note">หมายเหตุ</label>
+                  <input id="of-note" value={outNote} onChange={e => setOutNote(e.target.value)} /></div>
+              </div>
+            )}
+          </fieldset>
 
           {cur === "approved" && !isAdmin && (
             <p className="note-box">แผนนี้อนุมัติแล้ว หากแก้ชื่อ วันเวลา สถานที่ ผู้ควบคุม ประเภทงาน หรือทีมงาน แผนจะกลับไปสถานะ “{APPROVALS.pending.label}” เพื่อให้ผู้ดูแลอนุมัติใหม่</p>

@@ -155,6 +155,21 @@ export function PlanDetail({
           <p className="detail-text">{plan.description ? <Linkified text={plan.description} /> : "-"}</p>
         </div>
 
+        {plan.outage && (
+          <section className="outage-view" aria-label="แผนดับไฟ">
+            <div className="outage-view-head"><b>⚡ แผนดับไฟ</b>
+              <span className={`result-badge ${plan.outage.notified ? "r-completed" : "r-partial"}`}>{plan.outage.notified ? "แจ้งผู้ใช้ไฟแล้ว" : "ยังไม่ได้แจ้งผู้ใช้ไฟ"}</span></div>
+            <dl className="facts">
+              <div><dt>พื้นที่</dt><dd>{plan.outage.area}</dd></div>
+              <div><dt>ฟีดเดอร์</dt><dd>{plan.outage.feeder || "-"}</dd></div>
+              <div><dt>ดับไฟ</dt><dd>{fmtDateTime(plan.outage.outage_start)}</dd></div>
+              <div><dt>ไฟกลับ</dt><dd>{fmtDateTime(plan.outage.outage_end)}</dd></div>
+              <div><dt>ผู้ใช้ไฟที่กระทบ</dt><dd>{plan.outage.customers != null ? `${plan.outage.customers.toLocaleString("th-TH")} ราย` : "-"}</dd></div>
+              {plan.outage.note && <div><dt>หมายเหตุ</dt><dd>{plan.outage.note}</dd></div>}
+            </dl>
+          </section>
+        )}
+
         <ResultSection key={(plan.work_result?.recorded_at ?? "") + (localResult?.recorded_at ?? "")}
           plan={localResult ? { ...plan, work_result: localResult } : plan} profile={profile} supabase={supabase}
           onSaved={r => { setLocalResult(r); onResultSaved?.(r); }} />
