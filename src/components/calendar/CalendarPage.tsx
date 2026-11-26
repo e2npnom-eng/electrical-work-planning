@@ -14,9 +14,16 @@ import { createClient } from "@/lib/supabase/client";
 import { PlanForm } from "@/components/plans/PlanForm";
 import type { Prefill } from "@/components/plans/PlanForm";
 import { PlanDetail } from "@/components/plans/PlanDetail";
+import { CalendarHeader } from "./CalendarHeader";
+import { PlanItem } from "./PlanItem";
+import { StatCards } from "./StatCards";
+import { SummaryPanel } from "./SummaryPanel";
+import { VehiclePanel } from "./VehiclePanel";
+import { usePlanActions } from "./usePlanActions";
+import { DAY, dayStart, fromYmd, overlaps, ymd } from "./dates";
 import {
-  APPROVALS, PLAN_SELECT, WORK_TYPES, approvalOf, byEmployeeCode, canDeletePlan, canEditPlan,
-  canViewAll, expiryLabel, expiryOf, fmtDate, fmtTime, isMine, typeIcon
+  APPROVALS, PLAN_SELECT, approvalOf, byEmployeeCode, canDeletePlan, canEditPlan,
+  canViewAll, expiryOf, isMine, typeIcon
 } from "@/lib/plan-meta";
 import type { EmployeeProfile } from "@/types/employee";
 import type { ApprovalStatus, Vehicle, WorkPlan } from "@/types/plan";
@@ -24,36 +31,8 @@ import type { ApprovalStatus, Vehicle, WorkPlan } from "@/types/plan";
 type Range = { start: string; end: string };
 type Props = { profile: EmployeeProfile; initialPlanId?: string };
 
-const DAY = 86400000;
-const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-const fromYmd = (v: string) => { const [y, m, d] = v.split("-").map(Number); return new Date(y, m - 1, d); };
 const PAST = { bg: "#E4E0EC", fg: "#5F5875" }; // งานที่ผ่านไปแล้ว
 const CANCELLED = { bg: "#F1EFF5", fg: "#8B849C" }; // งานที่ยกเลิกแล้ว
-const dayStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-const overlaps = (p: WorkPlan, from: Date, to: Date) =>
-  new Date(p.start_at).getTime() < to.getTime() && new Date(p.end_at).getTime() > from.getTime();
-
-function PlanItem({ plan, showWho, onOpen, no }: { plan: WorkPlan; showWho: boolean; onOpen: (p: WorkPlan) => void; no?: number }) {
-  const ap = approvalOf(plan);
-  const asking = Boolean(plan.cancel_requested_at) && plan.status !== "cancelled";
-  const sameDay = dayStart(new Date(plan.start_at)).getTime() === dayStart(new Date(plan.end_at)).getTime();
-  return (
-    <button className="today-item" onClick={() => onOpen(plan)}>
-      {no !== undefined && <span className="today-no" aria-label={`ลำดับที่ ${no}`}>{no}</span>}
-      <span className="today-time">{sameDay ? `${fmtTime(plan.start_at)}–${fmtTime(plan.end_at)}` : "ต่อเนื่อง"}</span>
-      <span className="today-main">
-        <b className={plan.status === "cancelled" ? "ev-cancelled" : undefined}>{typeIcon(plan.work_type)} {plan.title}</b>
-        <small>📍 {plan.location}</small>
-        {(showWho || no !== undefined) && plan.controller && <small>👤 {plan.controller.full_name}{(plan.work_plan_members?.length ?? 0) > 0 ? ` +${plan.work_plan_members!.length} คน` : ""}</small>}
-        {(plan.work_plan_vehicles?.length ?? 0) > 0 && <small>🚗 {plan.work_plan_vehicles!.map(v => v.vehicle?.code).filter(Boolean).join(", ")}</small>}
-      </span>
-      <span className="badges">
-        {expiryOf(plan) && <span className={`mini-badge expiry-badge expiry-${expiryOf(plan)}`}>{expiryLabel(expiryOf(plan)!)}</span>}
-      <span className="mini-badge" style={asking ? { background: "#F8D7D2", color: "#7A1D12" } : { background: ap.bg, color: ap.fg }}>{asking ? "ขอยกเลิก" : ap.label}</span>
-      </span>
-    </button>
-  );
-}
 
 export function CalendarPage({ profile, initialPlanId }: Props) {
   const router = useRouter();
@@ -75,8 +54,6 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   const [span, setSpan] = useState<Range | null>(null); // ช่วงที่แสดงจริง (เดือน/สัปดาห์)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [actionError, setActionError] = useState("");
-  const [busy, setBusy] = useState(false);
   const [vehDate, setVehDate] = useState(() => ymd(new Date()));
   const [vehPlans, setVehPlans] = useState<WorkPlan[]>([]);
   const [toast, setToast] = useState("");
@@ -239,7 +216,6 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   // สถานะรถวันนี้ (ทุกคนเห็นรถทุกคัน ไม่ขึ้นกับตัวกรอง)
   const vehDay = fromYmd(vehDate);
   const vehDayEnd = new Date(vehDay.getFullYear(), vehDay.getMonth(), vehDay.getDate() + 1);
-  const vehIsToday = vehDate === ymd(new Date());
   const vehicleToday = vehicles.map(v => ({
     v, uses: vehPlans.filter(p => overlaps(p, vehDay, vehDayEnd)).filter(p => (p.work_plan_vehicles ?? []).some(x => x.vehicle_id === v.id))
   }));
@@ -256,9 +232,8 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
 
   function openNew(prefill?: Prefill) { setForm({ plan: null, prefill }); }
 
-  function shiftVehDate(n: number) { const d = fromYmd(vehDate); setVehDate(ymd(new Date(d.getFullYear(), d.getMonth(), d.getDate() + n))); }
-  function newWithVehicle(v: Vehicle) {
-    const d = fromYmd(vehDate);
+  function newWithVehicle(v: Vehicle, date: string) {
+    const d = fromYmd(date);
     openNew({
       start_at: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 8, 30).toISOString(),
       end_at: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 16, 30).toISOString(),
@@ -295,34 +270,8 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
     catch { window.prompt("คัดลอกลิงก์นี้", url); }
   }
 
-  async function setApproval(plan: WorkPlan, approval_status: ApprovalStatus, note?: string) {
-    setBusy(true); setActionError("");
-    const patch = { approval_status, ...(note !== undefined ? { review_note: note } : {}) };
-    const { error: e } = await supabase.from("work_plans").update(patch).eq("id", plan.id);
-    setBusy(false);
-    if (e) { setActionError(e.message); return; }
-    showToast(approval_status === "approved" ? "อนุมัติแล้ว" : approval_status === "returned" ? "ส่งกลับแล้ว" : "ส่งขออนุมัติแล้ว");
-    await reloadAll();
-  }
-
-  async function patchPlan(plan: WorkPlan, patch: Record<string, unknown>, doneMessage: string) {
-    setBusy(true); setActionError("");
-    const { error: e } = await supabase.from("work_plans").update(patch).eq("id", plan.id);
-    setBusy(false);
-    if (e) { setActionError(e.message); return; }
-    showToast(doneMessage);
-    await reloadAll();
-  }
-  const clearRequest = { cancel_requested_at: null, cancel_requested_by: null, cancel_reason: null };
-
-  async function deletePlan(plan: WorkPlan) {
-    if (!window.confirm(`ลบแผนงาน "${plan.title}" ใช่หรือไม่?`)) return;
-    const { error: e } = await supabase.from("work_plans").delete().eq("id", plan.id);
-    if (e) setActionError(e.message);
-    else { closeDetail(); await reloadAll(); }
-  }
-
-  const dateLabel = vehDay.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const { busy, actionError, setActionError, setApproval, patchPlan, deletePlan, clearRequest } =
+    usePlanActions({ supabase, reloadAll, showToast, closeDetail });
   const nowMs = Date.now();
   const inSpan = span
     ? plans.filter(p => p.status !== "cancelled" && p.start_at >= span.start && p.start_at < span.end)
@@ -336,66 +285,13 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
   const myEdit = mineSpan.filter(p => p.status !== "cancelled" && p.approval_status === "returned").length;
   const ongoingCount = window2.filter(p => p.status !== "cancelled"
     && new Date(p.start_at).getTime() <= nowMs && new Date(p.end_at).getTime() >= nowMs).length;
-  const freeVehicles = vehicleToday.filter(x => x.uses.length === 0).length;
-
-  const hasFilter = Boolean(q || fType || fApproval || onlyMine);
 
   return (
     <div className="home-wide">
-      <div className="page-head">
-        <div>
-          <h1>ปฏิทินแผนงาน</h1>
-          <p className="head-notes muted">เห็นแผนงานของทุกคน, แผนที่ซ้ำสถานที่หรือซ้ำคนจะมีเลขลำดับ #1 (วางก่อน) #2 ..., กดวันที่เพื่อสร้างแผนได้ทันที</p>
-        </div>
-        <div className="head-actions">
-          <div className="filters head-filters">
-            <select aria-label="ประเภทงาน" value={fType} onChange={e => setFType(e.target.value)}>
-              <option value="">ทุกประเภทงาน</option>
-              {WORK_TYPES.map(t => <option key={t.value} value={t.value}>{t.icon} {t.label}</option>)}
-            </select>
-            <select aria-label="สถานะอนุมัติ" value={fApproval} onChange={e => setFApproval(e.target.value)}>
-              <option value="">ทุกสถานะอนุมัติ</option>
-              {(Object.keys(APPROVALS) as ApprovalStatus[]).map(k => <option key={k} value={k}>{APPROVALS[k].label}</option>)}
-            </select>
-            {(
-              <label className="check-inline"><input type="checkbox" checked={onlyMine} onChange={e => setOnlyMine(e.target.checked)} />เฉพาะงานของฉัน</label>
-            )}
-            {hasFilter && <button className="link-btn" onClick={() => { setQ(""); setFType(""); setFApproval(""); setOnlyMine(false); }}>ล้างตัวกรอง</button>}
-          </div>
-          <label className="head-search">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-            <input type="search" placeholder="ค้นหาแผนงาน / สถานที่ / ชื่อคน" aria-label="ค้นหา" value={q} onChange={e => setQ(e.target.value)} />
-          </label>
-          <button className="btn" onClick={() => openNew()}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-            เพิ่มแผนงาน
-          </button>
-        </div>
-      </div>
+      <CalendarHeader q={q} setQ={setQ} fType={fType} setFType={setFType} fApproval={fApproval} setFApproval={setFApproval}
+        onlyMine={onlyMine} setOnlyMine={setOnlyMine} onAdd={() => openNew()} />
 
-      <div className="grid-cards">
-        <div className="stat"><div><span className="muted">แผนงานในช่วงที่แสดง</span><strong>{inSpan.length} <small className="muted">แผนงาน</small></strong></div><i className="stat-ico" style={{ background: "#EDE6FA" }} aria-hidden="true">📅</i></div>
-        <div className="stat"><div><span className="muted">กำลังดำเนินการ</span><strong>{ongoingCount} <small className="muted">แผนงาน</small></strong></div><i className="stat-ico" style={{ background: "#FFF0D6" }} aria-hidden="true">⚡</i></div>
-        <div className={`stat stat-approval${todo.length ? " has-todo" : ""}`}>
-          <div className="stat-body">
-            <span className="muted">{isAdmin ? "รออนุมัติ / ขอยกเลิก" : "สถานะการอนุมัติของฉัน"}</span>
-            {todo.slice(0, 3).map(p => {
-              const kind = p.cancel_requested_at ? "cancel" : expiryOf(p) === "over" ? "over" : p.approval_status === "returned" ? "returned" : "pending";
-              return (
-                <button key={p.id} className={`ap-item ap-${kind}`} onClick={() => setSelected(p)}>
-                  <span>{kind === "over" ? `${fmtDate(p.start_at)} ` : ""}{fmtTime(p.start_at)}</span> {p.title}{kind === "over" ? " · ผ่านวันแล้ว รอยกเลิก" : ""}
-                </button>
-              );
-            })}
-            {todo.length > 3 && <small className="muted">และอีก {todo.length - 3} รายการ</small>}
-            {todo.length === 0 && <small className="muted">{isAdmin ? "ไม่มีแผนที่รออนุมัติ" : "ไม่มีรายการค้าง"}</small>}
-          </div>
-          <span className="bell" aria-label={`${todo.length} รายการ`}>
-            <i className="stat-ico" style={{ background: "#FDE8E2" }} aria-hidden="true">🔔</i>
-            {todo.length > 0 && <b className="bell-count">{todo.length}</b>}
-          </span>
-        </div>
-      </div>
+      <StatCards inSpanCount={inSpan.length} ongoing={ongoingCount} todo={todo} isAdmin={isAdmin} onOpen={setSelected} />
 
       {error && <p className="error" role="alert">{error}</p>}
 
@@ -432,52 +328,13 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
           {todayList.length === 0 ? <p className="muted">ไม่มีงานวันนี้</p>
             : todayList.map((p, i) => <PlanItem key={p.id} plan={p} no={i + 1} showWho={scope === "all"} onOpen={setSelected} />)}
         </section>
-        {vehicles.length > 0 && (
-          <section className="panel side-panel vehicle-panel" aria-label="สถานะรถวันนี้">
-            <div className="today-head">
-              <h2>{vehIsToday ? "รถวันนี้" : "สถานะรถ"}</h2>
-              <span className="count-pill veh-count">ว่าง {freeVehicles}/{vehicles.length}</span>
-            </div>
-            <div className="veh-date">
-              <button type="button" className="veh-date-btn" aria-label="วันก่อนหน้า" onClick={() => shiftVehDate(-1)}>‹</button>
-              <input type="date" value={vehDate} aria-label="เลือกวันที่ดูสถานะรถ"
-                onChange={e => { if (e.target.value) setVehDate(e.target.value); }} />
-              <button type="button" className="veh-date-btn" aria-label="วันถัดไป" onClick={() => shiftVehDate(1)}>›</button>
-              {!vehIsToday && <button type="button" className="veh-date-today" onClick={() => setVehDate(ymd(new Date()))}>วันนี้</button>}
-            </div>
-            <p className="muted veh-date-label">{dateLabel} · กดที่รถเพื่อเพิ่มแผนงาน</p>
-            <div className="veh-list">
-              {vehicleToday.map(({ v, uses }) => (
-                <div key={v.id} className={`veh-row ${uses.length ? "veh-busy" : "veh-free"}`} role="button" tabIndex={0}
-                  title={`เพิ่มแผนงานโดยใช้รถ ${v.code}`}
-                  onClick={() => newWithVehicle(v)}
-                  onKeyDown={e => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); newWithVehicle(v); } }}>
-                  <div className="veh-top">
-                    <span><b>🚗 {v.code}</b>{v.plate && <small className="muted"> {v.plate}</small>}</span>
-                    <span className="veh-state">{uses.length ? "ใช้งาน" : "ว่าง"}</span>
-                  </div>
-                  {uses.map(p => (
-                    <button key={p.id} className="veh-use" onClick={e => { e.stopPropagation(); setSelected(p); }}>
-                      <span>{fmtTime(p.start_at)}–{fmtTime(p.end_at)}</span> {p.title}
-                    </button>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+        {vehicles.length > 0 && <VehiclePanel vehicles={vehicles} rows={vehicleToday} vehDate={vehDate} setVehDate={setVehDate}
+          onPick={newWithVehicle} onOpenPlan={setSelected} />}
       </aside>
       </div>
 
       <div className="home-bottom">
-        <section className="panel side-panel bottom-panel sum-panel">
-          <div className="today-head"><h2>สรุปสถานะงานของฉัน</h2><span className="muted" style={{ fontSize: 13 }}>ในช่วงที่แสดงในปฏิทิน</span></div>
-          <div className="sum-grid">
-            <div className="sum-box sum-done"><strong>{myDone}</strong><span>เสร็จสิ้น</span></div>
-            <div className="sum-box sum-cancel"><strong>{myCancelled}</strong><span>ยกเลิก</span></div>
-            <div className="sum-box sum-edit"><strong>{myEdit}</strong><span>แก้ไข (ส่งกลับ)</span></div>
-          </div>
-        </section>
+        <SummaryPanel done={myDone} cancelled={myCancelled} edit={myEdit} />
         <section className="panel side-panel bottom-panel">
           <div className="today-head"><h2>พรุ่งนี้</h2></div>
           {tomorrowList.length === 0 ? <p className="muted">ไม่มีงานพรุ่งนี้</p>
@@ -491,7 +348,7 @@ export function CalendarPage({ profile, initialPlanId }: Props) {
       {selected && <PlanDetail plan={selected} profile={profile}
         canEdit={canEditPlan(profile, selected)} canDelete={canDeletePlan(profile, selected)}
         busy={busy} actionError={actionError}
-        onClose={closeDetail}
+        onClose={closeDetail} onResultSaved={() => void reloadAll()}
         onEdit={() => { setForm({ plan: selected }); setSelected(null); }}
         onDelete={() => void deletePlan(selected)}
         onCopy={() => copyPlan(selected)} onCopyLink={() => void copyLink(selected)}
