@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { PersonPicker } from "@/components/ui/PersonPicker";
 import {
   APPROVALS, WORK_TYPES, fmtDateTime, localDateTime, shiftDate
 } from "@/lib/plan-meta";
@@ -145,6 +146,7 @@ export function PlanForm({ profile, employees, vehicles, plan, prefill, onClose,
 
   async function save(approvalTarget: ApprovalStatus | null) {
     setError("");
+    if (!controllerId) { setError("กรุณาเลือกผู้ควบคุมงาน"); return; }
     if (new Date(endAt) <= new Date(startAt)) { setError("เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่มต้น"); return; }
     setSaving(true);
     const base = {
@@ -248,10 +250,11 @@ export function PlanForm({ profile, employees, vehicles, plan, prefill, onClose,
             <input id="pf-title" required value={title} onChange={e => setTitle(e.target.value)} /></div>
           <div className="two-col">
             <div className="field"><label htmlFor="pf-ctrl">ผู้ควบคุมงาน *</label>
-              <select id="pf-ctrl" required value={controllerId} onChange={e => setControllerId(e.target.value)}>
-                <option value="">เลือกผู้ควบคุมงาน</option>
-                {available.map(e => <option key={e.id} value={e.id}>{e.full_name} ({e.employee_code})</option>)}
-              </select>
+              <PersonPicker className="pf-picker" id="pf-ctrl" ariaLabel="เลือกผู้ควบคุมงาน" value={controllerId} onChange={setControllerId}
+                options={[
+                  ...available.filter(e => e.id === profile.id).map(e => ({ value: e.id, label: e.full_name, sub: `${e.employee_code} · ฉัน`, pinned: true })),
+                  ...available.filter(e => e.id !== profile.id).map(e => ({ value: e.id, label: e.full_name, sub: `${e.employee_code}${e.position ? ` · ${e.position}` : ""}` }))
+                ]} />
             </div>
             <div className="field"><label htmlFor="pf-loc">สถานที่ปฏิบัติงาน *</label>
               <input id="pf-loc" required value={location} onChange={e => setLocation(e.target.value)} /></div>
